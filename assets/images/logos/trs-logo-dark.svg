@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1442.94 841.89">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: BaskOldFace, 'Baskerville Old Face';
+        font-size: 231.29px;
+      }
+
+      .cls-1, .cls-2, .cls-3 {
+        fill: #363b45;
+      }
+
+      .cls-4 {
+        fill: none;
+        stroke: #363b45;
+        stroke-miterlimit: 10;
+        stroke-width: 13px;
+      }
+
+      .cls-5 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-2 {
+        font-family: RageItalic, 'Rage Italic';
+        font-size: 67.84px;
+      }
+
+      .cls-6 {
+        letter-spacing: 0em;
+      }
+
+      .cls-7 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-3 {
+        font-family: Manrope-ExtraBold, Manrope;
+        font-size: 96.92px;
+        font-weight: 700;
+      }
+    </style>
+  </defs>
+  <g>
+    <text class="cls-1" transform="translate(217.75 511.52)"><tspan x="0" y="0">R</tspan></text>
+    <path class="cls-4" d="M149.1,401.65c16.32-65.36,75.43-113.78,145.85-113.78s129.9,48.73,146,114.41"/>
+    <path class="cls-4" d="M440.83,474.58c-16.27,65.44-75.42,113.93-145.89,113.93s-128.96-47.96-145.61-112.85"/>
+  </g>
+  <text class="cls-3" transform="translate(487.86 456)"><tspan x="0" y="0">The R</tspan><tspan class="cls-7" x="272.98" y="0">e</tspan><tspan class="cls-6" x="333.35" y="0">al Studi</tspan><tspan class="cls-5" x="711.12" y="0">o</tspan><tspan x="772.91" y="0">s.</tspan></text>
+  <text class="cls-2" transform="translate(488.87 516.52)"><tspan x="0" y="0">...its all in your head.</tspan></text>
+</svg>
