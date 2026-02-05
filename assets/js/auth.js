@@ -1,26 +1,27 @@
 console.log("Auth page loaded");
 
 // ------------------------
-// Firebase Imports & Init
+// Firebase Imports
 // ------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  sendEmailVerification 
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendEmailVerification
 } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { 
-  getFirestore, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  addDoc 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
 
 // ------------------------
-// Firebase Config
+// Firebase Init
 // ------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDFrIcY4Pv5BEu9r--kc1teKM5suy3uBP4",
@@ -28,7 +29,7 @@ const firebaseConfig = {
   projectId: "the-real-studio",
   storageBucket: "the-real-studio.firebasestorage.app",
   messagingSenderId: "471233923515",
-  appId: "1:471233923515:web:50d1a40713b18bfd6a5c9e",
+  appId: "1:471233923515:web:50d1a40713b18bfd6a5c9e"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -36,7 +37,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ------------------------
-// Toggle Forms
+// Toggle Sign In / Sign Up
 // ------------------------
 const tabs = document.querySelectorAll(".auth-tab");
 const forms = document.querySelectorAll(".auth-form");
@@ -52,45 +53,67 @@ tabs.forEach(tab => {
 });
 
 // ------------------------
-// SIGN UP
+// SIGN UP (CLIENT)
 // ------------------------
 const signupForm = document.getElementById("signup");
+
 signupForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const name = signupForm.signupName.value.trim();
-  const email = signupForm.signupEmail.value.trim();
-  const password = signupForm.signupPassword.value;
+  const formData = new FormData(signupForm);
+
+  const name = formData.get("signupName").trim();
+  const companyName = formData.get("companyName").trim();
+  const email = formData.get("signupEmail").trim();
+  const phone = formData.get("phone").trim();
+  const address = formData.get("address").trim();
+  const city = formData.get("city").trim();
+  const state = formData.get("state").trim();
+  const country = formData.get("country").trim();
+  const website = formData.get("website") || "";
+  const contactMethod = formData.get("contactMethod");
+  const password = formData.get("signupPassword");
 
   try {
-    // Create Firebase Auth user
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-    // Save user info to Firestore
+    // Save client profile
     await addDoc(collection(db, "users"), {
       uid: userCredential.user.uid,
       name,
+      companyName,
       email,
-      createdAt: new Date()
+      phone,
+      address,
+      city,
+      state,
+      country,
+      website,
+      preferredContact: contactMethod,
+      role: "client",
+      createdAt: serverTimestamp()
     });
 
-    // Send email verification
     await sendEmailVerification(userCredential.user);
-    alert("Account created! Please verify your email before signing in.");
 
-    // Reset form and switch to Sign In
+    alert("Account created successfully! Please verify your email before signing in.");
     signupForm.reset();
-    tabs[0].click();
+    tabs[0].click(); // switch to Sign In
 
-  } catch (err) {
-    alert("Error: " + err.message);
+  } catch (error) {
+    alert("Sign up failed: " + error.message);
   }
 });
 
 // ------------------------
-// SIGN IN
+// SIGN IN (ADMIN OR CLIENT)
 // ------------------------
 const signinForm = document.getElementById("signin");
+
 signinForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -98,27 +121,34 @@ signinForm?.addEventListener("submit", async (e) => {
   const password = signinForm.signinPassword.value;
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
 
-    // Check email verification
     if (!userCredential.user.emailVerified) {
       alert("Please verify your email before signing in.");
       return;
     }
 
-    // Check if user is admin
-    const adminQuery = query(collection(db, "admins"), where("email", "==", email));
+    // Check Admin Collection
+    const adminQuery = query(
+      collection(db, "admins"),
+      where("email", "==", email)
+    );
+
     const adminSnapshot = await getDocs(adminQuery);
 
     if (!adminSnapshot.empty) {
-      // Admin user
-      window.location.href = "admin-dashboard.html"; // redirect to admin
+      // ✅ Admin
+      window.location.href = "admin-dashboard.html";
     } else {
-      // Regular user
-      window.location.href = "dashboard.html"; // redirect to dashboard
+      // ✅ Client
+      window.location.href = "dashboard.html";
     }
 
-  } catch (err) {
-    alert("Login failed: " + err.message);
+  } catch (error) {
+    alert("Login failed: " + error.message);
   }
 });
