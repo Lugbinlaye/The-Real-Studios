@@ -13,76 +13,74 @@
 
 <body>
 
-<div class="page-wrapper overflow-hidden">
+  <div class="page-wrapper overflow-hidden">
 
-<section class="auth-section position-relative min-vh-100">
+    <section class="auth-section position-relative min-vh-100">
 
-  <!-- VIDEO BACKGROUND -->
-  <video class="auth-video" autoplay muted loop playsinline preload="auto">
-    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
-  </video>
+      <!-- VIDEO BACKGROUND -->
+      <video class="auth-video" autoplay muted loop playsinline preload="auto">
+        <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+      </video>
 
-  <!-- OVERLAY -->
-  <div class="auth-overlay"></div>
+      <!-- DARK OVERLAY -->
+      <div class="auth-overlay"></div>
 
-  <!-- CONTENT -->
-  <div class="auth-content d-flex align-items-center justify-content-center min-vh-100">
-    <div class="auth-card">
+      <!-- CONTENT -->
+      <div class="auth-content d-flex align-items-center justify-content-center min-vh-100">
+        <div class="auth-card">
 
-      <!-- LOGO -->
-      <div class="auth-logo">
-        <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
+          <!-- LOGO -->
+          <div class="auth-logo text-center mb-4">
+            <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
+          </div>
+
+          <!-- TOGGLE -->
+          <div class="auth-toggle mb-4">
+            <button class="auth-tab active" data-target="signin">Sign In</button>
+            <button class="auth-tab" data-target="signup">Sign Up</button>
+            <span class="auth-indicator"></span>
+          </div>
+
+          <!-- FORMS -->
+          <div class="auth-forms">
+
+            <!-- SIGN IN -->
+            <form id="signin" class="auth-form active">
+              <input type="email" name="signinEmail" placeholder="Email address" required>
+              <input type="password" name="signinPassword" placeholder="Password" required>
+              <button type="submit" class="btn btn-main btn-round-full w-100">Sign In</button>
+              <p class="auth-meta mt-2">Forgot password?</p>
+            </form>
+
+            <!-- SIGN UP -->
+            <form id="signup" class="auth-form">
+              <input type="text" name="signupName" placeholder="Full name" required>
+              <input type="email" name="signupEmail" placeholder="Email address" required>
+              <input type="password" name="signupPassword" placeholder="Password" required>
+              <button type="submit" class="btn btn-main btn-round-full w-100">Create Account</button>
+            </form>
+
+          </div>
+
+        </div>
       </div>
 
-      <!-- TOGGLE -->
-      <div class="auth-toggle">
-        <button class="auth-tab active" data-target="signin">Sign In</button>
-        <button class="auth-tab" data-target="signup">Sign Up</button>
-        <span class="auth-indicator"></span>
-      </div>
+    </section>
 
-      <!-- FORMS -->
-      <div class="auth-forms">
-
-        <!-- SIGN IN -->
-        <form id="signin" class="auth-form active">
-          <input id="signinEmail" type="email" placeholder="Email address" required>
-          <input id="signinPassword" type="password" placeholder="Password" required>
-
-          <button class="btn btn-main btn-round-full w-100">
-            Sign In
-          </button>
-
-          <p class="auth-meta">Forgot password?</p>
-        </form>
-
-        <!-- SIGN UP -->
-        <form id="signup" class="auth-form">
-          <input id="signupName" type="text" placeholder="Full name" required>
-          <input id="signupEmail" type="email" placeholder="Email address" required>
-          <input id="signupPassword" type="password" placeholder="Password" required>
-
-          <button class="btn btn-main btn-round-full w-100">
-            Create Account
-          </button>
-        </form>
-
-      </div>
-    </div>
   </div>
 
-</section>
-</div>
+  <!-- JS Libraries -->
+  <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
+  <script src="../assets/libs/aos-master/dist/aos.js"></script>
+  <script src="../assets/js/custom.js"></script>
 
-<script src="../assets/libs/jquery/dist/jquery.min.js"></script>
-<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-<script src="../assets/libs/aos-master/dist/aos.js"></script>
-<script src="../assets/js/custom.js"></script>
+  <!-- Firebase & Auth -->
+  <script type="module" src="../assets/js/auth.js"></script>
 
-<!-- AUTH LOGIC -->
-<script type="module" src="../assets/js/auth.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+  <!-- Iconify -->
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>
+
 </html>

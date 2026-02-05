@@ -1,0 +1,96 @@
+/* ===============================
+   ADMIN DASHBOARD (ISOLATED)
+================================ */
+
+.admin-hero {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* VIDEO */
+.admin-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* OVERLAY */
+.admin-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: -1;
+}
+
+/* CONTENT */
+.admin-content {
+  position: relative;
+  z-index: 2;
+  padding: 4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  color: #fff;
+}
+
+/* GLASS */
+.glass-card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+/* ADMIN PROJECT CARD */
+.admin-project {
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  padding: 1.5rem 0;
+}
+
+.admin-project:last-child {
+  border-bottom: none;
+}
+
+.admin-project h5 {
+  margin-bottom: 0.5rem;
+}
+
+.admin-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.admin-controls input,
+.admin-controls select {
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: none;
+}
+
+/* BUTTON */
+.btn-main {
+  background: #ffffff;
+  color: #000;
+  padding: 0.75rem;
+  border-radius: 50px;
+  font-weight: 600;
+  border: none;
+  transition: 0.3s;
+}
+
+.btn-main:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .admin-controls{
+    grid-template-columns: 1fr;
+  }
+}
