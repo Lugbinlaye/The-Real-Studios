@@ -2,81 +2,154 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <title>Client Dashboard | Studiova</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Studiova Dashboard</title>
 
-  <link rel="shortcut icon" href="../assets/images/logos/favicon.svg">
-  <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="stylesheet" href="../assets/css/dashboard.css">
 </head>
 
 <body>
 
-<section class="dashboard-hero">
+<div class="dashboard">
 
-  <!-- VIDEO BACKGROUND -->
-  <video class="dashboard-video" autoplay muted loop playsinline>
-    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
-  </video>
-  <div class="dashboard-overlay"></div>
-
-  <!-- CONTENT -->
-  <div class="dashboard-content container">
-
-    <!-- WELCOME -->
-    <div class="glass-card hero-card">
-      <h2 class="welcome-text">Welcome, <span id="userName">Client</span></h2>
-      <p>Your project dashboard — track progress and submit new requests.</p>
+  <!-- SIDEBAR -->
+  <aside class="sidebar glass">
+    <div class="sidebar-logo">
+      <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
     </div>
 
-    <!-- SUBMIT PROJECT -->
-    <div class="glass-card">
-      <h4 class="submit-project-title">Submit a New Project</h4>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-target="home">Home</button>
+      <button class="nav-btn" data-target="create">Create Project</button>
+      <button class="nav-btn" data-target="projects">My Projects</button>
+      <button class="nav-btn logout">Log Out</button>
+    </nav>
+  </aside>
 
-      <form id="dashboardForm">
-        <div class="form-row">
-          <input type="text" name="projectName" placeholder="Project Name" required>
-          <select name="projectType" required>
-            <option value="" disabled selected>Project Type</option>
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar glass">
+      <div></div>
+      <div class="client-info">
+        Client: <span id="clientName">Toluwanimi</span>
+      </div>
+    </header>
+
+    <!-- VIDEO BACKGROUND -->
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+    </video>
+    <div class="bg-overlay"></div>
+
+    <!-- HOME -->
+   <section id="home" class="section active">
+
+  <div class="hero">
+    <h1>
+      WELCOME TO<br>
+      <span>THE REAL STUDIOS</span>
+    </h1>
+    <p>Premium creative production • Real-time collaboration • Absolute clarity</p>
+  </div>
+
+  <!-- IMAGE SLIDER / CAROUSEL -->
+  <div class="image-slider glass">
+    <div class="slider-track">
+      <div class="slide"><img src="../assets/images/slider/img1.jpg" alt="Project 1"></div>
+      <div class="slide"><img src="../assets/images/slider/img2.jpg" alt="Project 2"></div>
+      <div class="slide"><img src="../assets/images/slider/img3.jpg" alt="Project 3"></div>
+      <div class="slide"><img src="../assets/images/slider/img4.jpg" alt="Project 4"></div>
+      <div class="slide"><img src="../assets/images/slider/img5.jpg" alt="Project 5"></div>
+    </div>
+  </div>
+
+  <!-- TRUST BAR -->
+  <div class="trust-bar glass">
+    <div class="trust-track">
+      <div class="trust-item">Netflix — 12 Projects</div>
+      <div class="trust-item">Apple — 9 Projects</div>
+      <div class="trust-item">Marvel — 7 Projects</div>
+      <div class="trust-item">Nike — 15 Projects</div>
+      <div class="trust-item">MTN — 11 Projects</div>
+      <div class="trust-item">Disney — 6 Projects</div>
+    </div>
+  </div>
+
+</section>
+
+    <!-- CREATE PROJECT -->
+    <section id="create" class="section">
+      <div class="card glass">
+        <h2>Create New Project</h2>
+
+        <form class="project-form">
+          <input type="text" placeholder="Project Title" required>
+          <select required>
+            <option disabled selected>Project Type</option>
+            <option>Film Production</option>
             <option>Brand Animation</option>
-            <option>Video Production</option>
+            <option>Commercial</option>
             <option>Photography</option>
             <option>Virtual Production</option>
           </select>
+          <textarea placeholder="Project Description" required></textarea>
+
+          <div class="upload">
+            <input type="file">
+          </div>
+
+          <button type="submit">Submit Project</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- MY PROJECTS -->
+    <section id="projects" class="section">
+
+      <div class="projects-grid">
+
+        <div class="project-card glass">
+          <h3>Brand Launch Film</h3>
+          <p>Status: <span class="status active">In Progress</span></p>
+
+          <div class="progress-bar">
+            <div style="width: 65%"></div>
+          </div>
+
+          <ul class="project-meta">
+            <li>Start: Jan 10</li>
+            <li>Deadline: Mar 15</li>
+            <li>Manager: Theory Studios</li>
+          </ul>
+
+          <button>View Details</button>
         </div>
 
-        <textarea name="projectDescription" class="project-description" placeholder="Project Overview" required></textarea>
+        <div class="project-card glass">
+          <h3>Commercial Ad</h3>
+          <p>Status: <span class="status done">Completed</span></p>
 
-        <label class="file-drop-zone">
-          <input type="file" name="projectBrief" accept=".pdf,.doc,.docx" required>
-          <div class="file-drop-content">
-            <div class="file-icon-stack">
-              <iconify-icon icon="mdi:file-pdf-box" class="pdf"></iconify-icon>
-              <iconify-icon icon="mdi:file-word-box" class="doc"></iconify-icon>
-            </div>
-            <p class="upload-text">Drag & drop your project brief<br><span>or click to browse</span></p>
+          <div class="progress-bar">
+            <div style="width: 100%"></div>
           </div>
-        </label>
 
-        <button type="submit" class="btn-main w-100">Submit Project</button>
-      </form>
-    </div>
+          <ul class="project-meta">
+            <li>Delivered</li>
+            <li>Approved</li>
+          </ul>
 
-    <!-- ONGOING PROJECTS -->
-    <div class="glass-card ongoing-projects">
-      <h4 class="ongoing-projects-title">Ongoing Projects</h4>
-      <ul class="list-group" id="ongoingProjects">
-        <li class="list-group-item">Loading projects…</li>
-      </ul>
-    </div>
+          <button>Download Files</button>
+        </div>
 
-    <button id="signOutBtn" class="btn-main w-100">Sign Out</button>
+      </div>
 
-  </div>
-</section>
+    </section>
 
-<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-<script type="module" src="../assets/js/dashboard.js"></script>
+  </main>
+</div>
 
+<script src="../assets/js/dashboard.js"></script>
 </body>
 </html>
