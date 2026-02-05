@@ -1,0 +1,139 @@
+/* ==============================
+   DASHBOARD ONLY (ISOLATED)
+============================== */
+
+.dashboard-hero {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* VIDEO */
+.dashboard-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+/* OVERLAY */
+.dashboard-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: -1;
+}
+
+/* CONTENT */
+.dashboard-content {
+  position: relative;
+  z-index: 2;
+  padding: 4rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  color: #ffffff;
+}
+
+/* GLASS CARD */
+.glass-card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(16px);
+  border-radius: 20px;
+  padding: 2rem;
+}
+
+/* TEXT FORCE WHITE */
+.dashboard-hero h2,
+.dashboard-hero h4,
+.dashboard-hero p,
+.dashboard-hero span,
+.dashboard-hero li {
+  color: #ffffff !important;
+}
+
+/* FORM */
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-row input,
+.form-row select,
+.project-description {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+/* FILE UPLOAD */
+.file-drop-zone {
+  display: block;
+  padding: 1.5rem;
+  border: 2px dashed rgba(255,255,255,0.4);
+  border-radius: 15px;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.file-drop-zone input {
+  display: none;
+}
+
+.file-icon-stack {
+  font-size: 3.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.pdf { color: #ff3b30; }
+.doc { color: #0a66c2; }
+
+/* BUTTON */
+.btn-main {
+  background: #ffffff;
+  color: #000;
+  border-radius: 50px;
+  padding: 0.75rem;
+  font-weight: 600;
+  border: none;
+  transition: 0.3s;
+}
+
+.btn-main:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* PROJECT ITEM */
+.project-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg,#fff,#ff3d00);
+  transition: width 0.5s ease;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .form-row{flex-direction:column;}
+}

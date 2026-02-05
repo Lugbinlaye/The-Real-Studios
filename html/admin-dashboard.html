@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Studiova Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="shortcut icon" href="../assets/images/logos/favicon.svg">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
+</head>
+
+<body>
+
+<section class="admin-hero">
+
+  <!-- VIDEO -->
+  <video class="admin-video" autoplay muted loop playsinline>
+    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+  </video>
+  <div class="admin-overlay"></div>
+
+  <!-- CONTENT -->
+  <div class="admin-content container">
+
+    <div class="glass-card admin-header">
+      <h2>Admin Dashboard</h2>
+      <p>Manage all client projects and production progress</p>
+    </div>
+
+    <!-- PROJECT LIST -->
+    <div class="glass-card">
+      <h4>All Client Projects</h4>
+      <div id="adminProjects" class="admin-project-list">
+        Loading projects…
+      </div>
+    </div>
+
+    <button id="adminSignOut" class="btn-main w-100">Sign Out</button>
+
+  </div>
+</section>
+
+<script type="module" src="../assets/js/admin-dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Studiova Dashboard</title>
+
+  <link rel="shortcut icon" href="../assets/images/logos/favicon.svg">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+
+<body>
+
+<section class="dashboard-hero">
+
+  <!-- VIDEO BACKGROUND -->
+  <video class="dashboard-video" autoplay muted loop playsinline>
+    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+  </video>
+  <div class="dashboard-overlay"></div>
+
+  <!-- CONTENT -->
+  <div class="dashboard-content container">
+
+    <!-- WELCOME -->
+    <div class="glass-card hero-card">
+      <h2 class="welcome-text">Welcome, <span id="userName">Client</span></h2>
+      <p>Your project dashboard — track progress and submit new requests.</p>
+    </div>
+
+    <!-- SUBMIT PROJECT -->
+    <div class="glass-card">
+      <h4 class="submit-project-title">Submit a New Project</h4>
+
+      <form id="dashboardForm">
+        <div class="form-row">
+          <input type="text" name="projectName" placeholder="Project Name" required>
+          <select name="projectType" required>
+            <option value="" disabled selected>Project Type</option>
+            <option>Brand Animation</option>
+            <option>Video Production</option>
+            <option>Photography</option>
+            <option>Virtual Production</option>
+          </select>
+        </div>
+
+        <textarea name="projectDescription" class="project-description" placeholder="Project Overview" required></textarea>
+
+        <label class="file-drop-zone">
+          <input type="file" name="projectBrief" accept=".pdf,.doc,.docx" required>
+          <div class="file-drop-content">
+            <div class="file-icon-stack">
+              <iconify-icon icon="mdi:file-pdf-box" class="pdf"></iconify-icon>
+              <iconify-icon icon="mdi:file-word-box" class="doc"></iconify-icon>
+            </div>
+            <p class="upload-text">Drag & drop your project brief<br><span>or click to browse</span></p>
+          </div>
+        </label>
+
+        <button type="submit" class="btn-main w-100">Submit Project</button>
+      </form>
+    </div>
+
+    <!-- ONGOING PROJECTS -->
+    <div class="glass-card ongoing-projects">
+      <h4 class="ongoing-projects-title">Ongoing Projects</h4>
+      <ul class="list-group" id="ongoingProjects">
+        <li class="list-group-item">Loading projects…</li>
+      </ul>
+    </div>
+
+    <button id="signOutBtn" class="btn-main w-100">Sign Out</button>
+
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+<script type="module" src="../assets/js/dashboard.js"></script>
+
+</body>
+</html>

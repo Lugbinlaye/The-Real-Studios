@@ -13,26 +13,16 @@
 
 <body>
 
-  <!--  Page Wrapper -->
-  <div class="page-wrapper overflow-hidden">
+<div class="page-wrapper overflow-hidden">
 
-    <!--  Get in touch Section -->
-   <section class="auth-section position-relative min-vh-100">
+<section class="auth-section position-relative min-vh-100">
 
   <!-- VIDEO BACKGROUND -->
- <video
-  class="auth-video"
-  autoplay
-  muted
-  loop
-  playsinline
-  preload="auto"
->
-  <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
-</video>
+  <video class="auth-video" autoplay muted loop playsinline preload="auto">
+    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+  </video>
 
-
-  <!-- DARK OVERLAY -->
+  <!-- OVERLAY -->
   <div class="auth-overlay"></div>
 
   <!-- CONTENT -->
@@ -56,8 +46,8 @@
 
         <!-- SIGN IN -->
         <form id="signin" class="auth-form active">
-          <input type="email" placeholder="Email address" required>
-          <input type="password" placeholder="Password" required>
+          <input id="signinEmail" type="email" placeholder="Email address" required>
+          <input id="signinPassword" type="password" placeholder="Password" required>
 
           <button class="btn btn-main btn-round-full w-100">
             Sign In
@@ -68,9 +58,9 @@
 
         <!-- SIGN UP -->
         <form id="signup" class="auth-form">
-          <input type="text" placeholder="Full name" required>
-          <input type="email" placeholder="Email address" required>
-          <input type="password" placeholder="Password" required>
+          <input id="signupName" type="text" placeholder="Full name" required>
+          <input id="signupEmail" type="email" placeholder="Email address" required>
+          <input id="signupPassword" type="password" placeholder="Password" required>
 
           <button class="btn btn-main btn-round-full w-100">
             Create Account
@@ -82,26 +72,17 @@
   </div>
 
 </section>
+</div>
 
+<script src="../assets/libs/jquery/dist/jquery.min.js"></script>
+<script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
+<script src="../assets/libs/aos-master/dist/aos.js"></script>
+<script src="../assets/js/custom.js"></script>
 
-  </div>
+<!-- AUTH LOGIC -->
+<script type="module" src="../assets/js/auth.js"></script>
 
-  <div class="get-template hstack gap-2">
-    
-    <button class="btn bg-primary p-2 round-52 rounded-circle hstack justify-content-center flex-shrink-0"
-      id="scrollToTopBtn">
-      <iconify-icon icon="lucide:arrow-up" class="fs-7 text-dark"></iconify-icon>
-    </button>
-  </div>
-
-
-  <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
-  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-  <script src="../assets/libs/aos-master/dist/aos.js"></script>
-  <script src="../assets/js/custom.js"></script>
-  <!-- solar icons -->
-  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>
-
 </html>
