@@ -1,45 +1,94 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Studiova Admin Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <link rel="shortcut icon" href="../assets/images/logos/favicon.svg">
-  <link rel="stylesheet" href="../assets/css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Studiova</title>
+  <link rel="stylesheet" href="../assets/css/dashboard.css">
   <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
 </head>
-
 <body>
 
-<section class="admin-hero">
+<div class="dashboard-wrapper">
 
-  <!-- VIDEO -->
-  <video class="admin-video" autoplay muted loop playsinline>
-    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
-  </video>
-  <div class="admin-overlay"></div>
-
-  <!-- CONTENT -->
-  <div class="admin-content container">
-
-    <div class="glass-card admin-header">
-      <h2>Admin Dashboard</h2>
-      <p>Manage all client projects and production progress</p>
+  <!-- SIDEBAR -->
+  <aside class="dashboard-sidebar">
+    <div class="sidebar-logo">
+      <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
     </div>
+    <nav class="sidebar-nav">
+      <button data-section="home" class="nav-item active">Home</button>
+      <button data-section="projects" class="nav-item">Projects</button>
+      <button data-section="messages" class="nav-item">Messages</button>
+      <button id="logoutBtn" class="nav-item logout">Log Out</button>
+    </nav>
+  </aside>
 
-    <!-- PROJECT LIST -->
-    <div class="glass-card">
-      <h4>All Client Projects</h4>
-      <div id="adminProjects" class="admin-project-list">
-        Loading projects…
+  <!-- MAIN CONTENT -->
+  <main class="dashboard-main">
+
+    <!-- VIDEO BACKGROUND -->
+    <video class="dashboard-video" autoplay muted loop playsinline>
+      <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+    </video>
+    <div class="dashboard-overlay"></div>
+
+    <!-- HOME SECTION -->
+    <section id="home" class="dashboard-section active">
+      <h1 class="welcome-big">
+        Welcome Admin<br>
+        <span class="studio-name">Theory Studios</span>
+      </h1>
+
+      <div class="home-gallery glass-wide">
+        <!-- Optional: client logos or highlights -->
       </div>
-    </div>
+    </section>
 
-    <button id="adminSignOut" class="btn-main w-100">Sign Out</button>
+    <!-- PROJECTS SECTION -->
+    <section id="projects" class="dashboard-section">
+      <h2 class="section-title">All Projects</h2>
+      <div id="adminProjectsList" class="projects-grid"></div>
 
-  </div>
-</section>
+      <!-- Project Detail Modal -->
+      <div id="projectDetailModal" class="modal glass-card hidden">
+        <button id="closeProjectModal" class="btn-close">✕</button>
+        <h3 id="modalProjectTitle"></h3>
+        <p><strong>Client:</strong> <span id="modalClientName"></span></p>
+        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+        <p><strong>Progress:</strong> <span id="modalProgress"></span>%</p>
+        <p><strong>Description:</strong></p>
+        <p id="modalDescription"></p>
+
+        <label>Update Status:</label>
+        <select id="updateStatus">
+          <option value="Pending">Pending</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+
+        <label>Update Progress (%):</label>
+        <input type="number" id="updateProgress" min="0" max="100">
+
+        <label>Proposed Timeline / Notes:</label>
+        <textarea id="updateTimeline"></textarea>
+
+        <button id="saveProjectUpdate" class="btn-primary glass-btn">Save Updates</button>
+        <a id="downloadBrief" class="btn-primary glass-btn" href="#" target="_blank">Download Project Brief</a>
+      </div>
+    </section>
+
+    <!-- MESSAGES SECTION -->
+    <section id="messages" class="dashboard-section">
+      <h2 class="section-title">Client Messages</h2>
+      <div id="messagesList" class="messages-grid glass-wide">
+        <!-- Loaded dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+</div>
 
 <script type="module" src="../assets/js/admin-dashboard.js"></script>
 </body>

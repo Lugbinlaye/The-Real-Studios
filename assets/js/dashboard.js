@@ -4,14 +4,27 @@ console.log("Dashboard JS loaded");
    FIREBASE IMPORTS
 ================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { 
-  getAuth, onAuthStateChanged, signOut 
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { 
-  getFirestore, collection, query, where, getDocs, addDoc 
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  addDoc,
+  onSnapshot,
+  doc,
+  getDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { 
-  getStorage, ref, uploadBytes, getDownloadURL 
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
 
 /* ===============================
@@ -31,50 +44,59 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-let currentUserId = null;
-
 /* ===============================
-   SIDEBAR / TAB NAVIGATION
+   GLOBAL STATE
 ================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  const navItems = document.querySelectorAll(".nav-item");
-  const sections = document.querySelectorAll(".dashboard-section");
-
-  navItems.forEach(btn => {
-    btn.addEventListener("click", () => {
-      // Log out
-      if (btn.id === "logoutBtn") {
-        signOut(auth).then(() => window.location.href = "../html/auth.html");
-        return;
-      }
-
-      const targetId = btn.dataset.section;
-      const targetSection = document.getElementById(targetId);
-      if (!targetSection) return;
-
-      navItems.forEach(b => b.classList.remove("active"));
-      sections.forEach(s => s.classList.remove("active"));
-
-      btn.classList.add("active");
-      targetSection.classList.add("active");
-
-      if (targetId === "projects") loadProjects();
-    });
-  });
-});
+let currentUserId = null;
+let projectsUnsub = null;
+let activeProjectId = null;
 
 /* ===============================
-   AUTH STATE + DISPLAY NAME
+   AUTH STATE
 ================================ */
 onAuthStateChanged(auth, user => {
   if (!user) {
-    window.location.href = "../html/auth.html";
+    window.location.href = "../html/sign-in.html";
     return;
   }
 
   currentUserId = user.uid;
+
   const nameEl = document.getElementById("userName");
-  if (nameEl) nameEl.textContent = user.displayName || user.email.split("@")[0];
+  if (nameEl) {
+    nameEl.textContent = user.displayName || user.email.split("@")[0];
+  }
+
+  const projectsSection = document.getElementById("projects");
+  if (projectsSection?.classList.contains("active")) {
+    startProjectsListener();
+  }
+});
+
+/* ===============================
+   SIDEBAR / TAB NAVIGATION
+================================ */
+document.querySelectorAll(".nav-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.id === "logoutBtn") {
+      signOut(auth).then(() => location.href = "../html/auth.html");
+      return;
+    }
+
+    document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
+
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.section)?.classList.add("active");
+
+    if (btn.dataset.section === "projects") {
+      startProjectsListener();
+    } else {
+      stopProjectsListener();
+    }
+  });
+
+  btn.addEventListener("touchstart", () => btn.click());
 });
 
 /* ===============================
@@ -82,128 +104,179 @@ onAuthStateChanged(auth, user => {
 ================================ */
 const dashboardForm = document.getElementById("dashboardForm");
 
-dashboardForm?.addEventListener("submit", async (e) => {
+dashboardForm?.addEventListener("submit", async e => {
   e.preventDefault();
-  if (!currentUserId) return alert("User not found.");
+  if (!currentUserId) return;
 
   const title = dashboardForm.projectName.value.trim();
   const type = dashboardForm.projectType.value;
   const description = dashboardForm.projectDescription.value.trim();
-  const fileInput = dashboardForm.projectBrief;
+  const file = dashboardForm.projectBrief.files[0];
 
-  if (!title || !type || !description || !fileInput.files.length) {
-    return showPopup("Please fill all fields and upload a brief.");
+  if (!title || !type || !description || !file) {
+    return showPopup("Please complete all fields.");
   }
 
-  // Create popup container under submit button
-  const submitBtn = dashboardForm.querySelector('button[type="submit"]');
-  const popup = createPopupUnderButton(submitBtn, "Submitting your project…");
+  const submitBtn = dashboardForm.querySelector("button[type='submit']");
+  const popup = createPopupUnderButton(submitBtn, "Submitting project…");
 
   try {
-    // Upload file to Firebase Storage
-    const file = fileInput.files[0];
-    const fileRef = ref(storage, `project_briefs/${currentUserId}_${Date.now()}_${file.name}`);
+    const fileRef = ref(storage, `briefs/${currentUserId}_${Date.now()}_${file.name}`);
     await uploadBytes(fileRef, file);
     const fileURL = await getDownloadURL(fileRef);
 
-    // Save project to Firestore
     await addDoc(collection(db, "projects"), {
-      userId: currentUserId,
-      title,
-      type,
-      description,
-      fileURL,
-      status: "Pending",
-      progress: 0,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
+  userId: auth.currentUser.uid, // ✅ NEVER currentUserId variable
+  userEmail: auth.currentUser.email, // optional but helpful
+  title,
+  type,
+  description,
+  fileURL,
+  status: "Pending",
+  progress: 0,
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp()
+});
 
-    popup.update("Project submitted successfully! 🎉");
+    popup.update("Project submitted successfully 🎉");
     dashboardForm.reset();
-
   } catch (err) {
     console.error(err);
-    popup.update("Failed to submit project. Try again.");
+    popup.update("Submission failed.");
   } finally {
     setTimeout(() => popup.remove(), 4000);
   }
 });
 
 /* ===============================
-   POPUP CREATION UNDER BUTTON
+   PROJECT LIST (OPTIMIZED)
 ================================ */
-function createPopupUnderButton(button, message) {
-  const popup = document.createElement("div");
-  popup.className = "popup-notification glass-card";
-  popup.textContent = message;
+function startProjectsListener() {
+  if (!currentUserId) {
+    console.warn("Auth not ready yet.");
+    return;
+  }
 
-  // Insert after the button
-  button.parentNode.insertBefore(popup, button.nextSibling);
+  const list = document.getElementById("projectsList");
+  if (!list) return;
 
-  popup.style.marginTop = "10px";
-  popup.style.padding = "10px 15px";
-  popup.style.transition = "all 0.3s ease";
-  popup.style.opacity = 1;
+  list.innerHTML = `<div class="glass-card">Loading projects…</div>`;
 
-  return {
-    update: msg => popup.textContent = msg,
-    remove: () => {
-      popup.style.opacity = 0;
-      setTimeout(() => popup.remove(), 300);
-    }
-  };
-}
+  console.log("Current user UID:", currentUserId);
 
-/* Optional quick alert inside form if fields not filled */
-function showPopup(msg) {
-  const submitBtn = dashboardForm.querySelector('button[type="submit"]');
-  const popup = createPopupUnderButton(submitBtn, msg);
-  setTimeout(() => popup.remove(), 3000);
-}
+  const q = query(
+    collection(db, "projects"),
+    where("userId", "==", currentUserId)
+  );
 
-/* ===============================
-   LOAD PROJECTS (MY PROJECTS TAB)
-================================ */
-async function loadProjects() {
-  const projectsList = document.getElementById("projectsList");
-  if (!projectsList || !currentUserId) return;
+  if (projectsUnsub) projectsUnsub();
 
-  projectsList.innerHTML = `<div class="glass-card loading">Loading your projects…</div>`;
+  projectsUnsub = onSnapshot(q, snap => {
+    console.log("Projects fetched:", snap.size);
 
-  try {
-    const q = query(collection(db, "projects"), where("userId", "==", currentUserId));
-    const snapshot = await getDocs(q);
+    list.innerHTML = "";
 
-    projectsList.innerHTML = "";
-
-    if (snapshot.empty) {
-      projectsList.innerHTML = `<div class="glass-card empty">No projects yet. Create one to get started.</div>`;
+    if (snap.empty) {
+      list.innerHTML = `
+        <div class="glass-card">
+          No projects found for this account.
+        </div>
+      `;
       return;
     }
 
-    snapshot.forEach(doc => {
-      const data = doc.data();
+    snap.forEach(docSnap => {
+      const p = docSnap.data();
+
       const card = document.createElement("div");
       card.className = "glass-card project-card";
-
       card.innerHTML = `
-        <h3 class="project-title">${data.title}</h3>
-        <p class="type">${data.type}</p>
-        <p class="status">Status: <strong>${data.status || "Pending"}</strong></p>
+        <h3>${p.title}</h3>
+        <p>Status: <strong>${p.status}</strong></p>
         <div class="progress-bar">
-          <div class="progress" style="width:${data.progress || 0}%"></div>
+          <div class="progress" style="width:${p.progress || 0}%"></div>
         </div>
-        <small class="last-updated">
-          Last updated: ${data.updatedAt ? new Date(data.updatedAt.seconds * 1000).toLocaleDateString() : "Pending"}
-        </small>
       `;
 
-      projectsList.appendChild(card);
+      card.onclick = () => openProjectDetails(docSnap.id);
+      list.appendChild(card);
     });
+  }, err => {
+    console.error("Firestore listener error:", err);
+    list.innerHTML = `
+      <div class="glass-card error">
+        Failed to load projects.
+      </div>
+    `;
+  });
+}
 
-  } catch (err) {
-    console.error(err);
-    projectsList.innerHTML = `<div class="glass-card error">Failed to load projects.</div>`;
-  }
+
+/* ===============================
+   PROJECT DETAILS VIEW
+================================ */
+async function openProjectDetails(projectId) {
+  activeProjectId = projectId;
+
+  document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
+  document.getElementById("projectDetails")?.classList.add("active");
+
+  const container = document.getElementById("projectDetailsContent");
+  container.innerHTML = "Loading…";
+
+  const snap = await getDoc(doc(db, "projects", projectId));
+  if (!snap.exists()) return;
+
+  const p = snap.data();
+
+  container.innerHTML = `
+    <button id="backBtn" class="glass-btn">← Back</button>
+    <h2>${p.title}</h2>
+    <p>${p.description}</p>
+    <p>Status: <strong>${p.status}</strong></p>
+    <p>Progress: ${p.progress}%</p>
+  `;
+
+  document.getElementById("backBtn").onclick = () => {
+    document.getElementById("projects").classList.add("active");
+    document.getElementById("projectDetails").classList.remove("active");
+  };
+
+  // 🔔 Admin updates listener (single doc = low cost)
+  onSnapshot(doc(db, "projects", projectId), snap => {
+    const updated = snap.data();
+    if (updated.status !== p.status || updated.progress !== p.progress) {
+      showToast("Project updated by admin");
+    }
+  });
+}
+
+/* ===============================
+   POPUPS / TOASTS
+================================ */
+function createPopupUnderButton(btn, msg) {
+  const popup = document.createElement("div");
+  popup.className = "popup-notification glass-card";
+  popup.textContent = msg;
+  btn.after(popup);
+
+  return {
+    update: t => popup.textContent = t,
+    remove: () => popup.remove()
+  };
+}
+
+function showPopup(msg) {
+  const btn = dashboardForm.querySelector("button[type='submit']");
+  const p = createPopupUnderButton(btn, msg);
+  setTimeout(() => p.remove(), 3000);
+}
+
+function showToast(msg) {
+  const toast = document.createElement("div");
+  toast.className = "toast glass-card";
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.remove(), 3500);
 }
