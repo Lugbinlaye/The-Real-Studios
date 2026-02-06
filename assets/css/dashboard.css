@@ -578,3 +578,99 @@ label {
     display: none;
   }
 }
+/* ===============================
+   MOBILE ONLY: HORIZONTAL BOTTOM BAR
+================================ */
+@media (max-width: 768px) {
+
+  /* 1. Wrapper: Stack vertically to fit mobile screen */
+  .dashboard-wrapper {
+    display: block; /* Simplifies layout for mobile */
+    height: auto;
+    min-height: 100vh;
+  }
+
+  /* 2. Sidebar transforms into Bottom Navigation Bar */
+  .dashboard-sidebar {
+    position: fixed;      /* Stick to screen */
+    bottom: 0;            /* Stick to bottom */
+    left: 0;
+    width: 100%;          /* Full width */
+    height: 70px;         /* Fixed height */
+    padding: 0;
+    margin: 0;
+    
+    /* HORIZONTAL LAYOUT */
+    display: flex;
+    flex-direction: row;  /* <--- Left to Right */
+    align-items: center;
+    justify-content: space-evenly; /* Spread buttons evenly */
+    
+    /* Design */
+    background: rgba(10, 10, 10, 0.95); /* Dark solid background */
+    backdrop-filter: blur(20px);
+    border-right: none;   /* Remove desktop border */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 9999;        /* Always on top */
+  }
+
+  /* 3. Navigation Buttons */
+  .nav-item {
+    flex: 1;              /* All buttons take equal space */
+    height: 100%;         /* Full height of bar */
+    padding: 0;
+    margin: 0;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    font-size: 0.75rem;   /* Smaller text for mobile */
+    border-radius: 0;     /* Remove pill shape */
+    background: transparent;
+  }
+
+  /* 4. Active State (Top Highlight instead of Left) */
+  .nav-item.active {
+    background: transparent;
+    border-left: none;    /* Remove desktop border */
+    border-top: 3px solid var(--primary); /* Indicator on top */
+    color: var(--primary);
+    box-shadow: none;     /* Clean look */
+  }
+
+  /* 5. Logout Button (Sit nicely on the right) */
+  .nav-item.logout {
+    margin-top: 0;        /* Remove desktop "push to bottom" spacing */
+    border: none;
+    color: #ff6b6b;
+    background: transparent;
+    flex: 0.8;            /* Slightly smaller than other tabs */
+  }
+
+  /* 6. Main Content - Add padding so it doesn't hide behind the bar */
+  .dashboard-main {
+    padding: 20px;
+    padding-bottom: 100px; /* IMPORTANT: Space for bottom bar */
+    width: 100%;
+    height: auto;
+    overflow-y: visible;   /* Let the page scroll naturally */
+  }
+
+  /* 7. Hide Desktop-Specific Elements */
+  .top-user {
+    display: none;
+  }
+
+  /* 8. Fix Project Grid for small screens */
+  .projects-grid {
+    grid-template-columns: 1fr; /* Single column */
+    gap: 20px;
+  }
+
+  /* 9. Fix Chat Height */
+  .chat-container {
+    height: 70vh; /* Taller chat on mobile */
+  }
+}
