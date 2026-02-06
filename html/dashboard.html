@@ -2,154 +2,153 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Client Dashboard | Studiova</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Client Dashboard | Studiova</title>
 
+  <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="stylesheet" href="../assets/css/dashboard.css">
 </head>
 
 <body>
 
-<div class="dashboard">
+<div class="dashboard-wrapper">
 
   <!-- SIDEBAR -->
-  <aside class="sidebar glass">
+  <aside class="dashboard-sidebar">
     <div class="sidebar-logo">
       <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
     </div>
 
     <nav class="sidebar-nav">
-      <button class="nav-btn active" data-target="home">Home</button>
-      <button class="nav-btn" data-target="create">Create Project</button>
-      <button class="nav-btn" data-target="projects">My Projects</button>
-      <button class="nav-btn logout">Log Out</button>
+      <button class="nav-item active" data-section="home">Home</button>
+      <button class="nav-item" data-section="create">Create Project</button>
+      <button class="nav-item" data-section="projects">My Projects</button>
+      <button id="logoutBtn" class="nav-item logout">Log Out</button>
     </nav>
   </aside>
 
   <!-- MAIN -->
-  <main class="main">
+  <main class="dashboard-main">
 
-    <!-- TOP BAR -->
-    <header class="topbar glass">
-      <div></div>
-      <div class="client-info">
-        Client: <span id="clientName">Toluwanimi</span>
-      </div>
-    </header>
-
-    <!-- VIDEO BACKGROUND -->
-    <video class="bg-video" autoplay muted loop playsinline>
+    <!-- VIDEO -->
+    <video class="dashboard-video" autoplay muted loop playsinline>
       <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
     </video>
-    <div class="bg-overlay"></div>
+    <div class="dashboard-overlay"></div>
+
+    <!-- USER NAME -->
+    <div class="top-user">
+      <span id="userName">Client</span>
+    </div>
 
     <!-- HOME -->
-   <section id="home" class="section active">
+    <section id="home" class="dashboard-section active">
+      <div class="home-center">
+        <h1 class="welcome-big">
+          CREATE YOUR DREAM<br>
+          <span class="studio-name"></span>
+        </h1>
 
-  <div class="hero">
-    <h1>
-      WELCOME TO<br>
-      <span>THE REAL STUDIOS</span>
-    </h1>
-    <p>Premium creative production • Real-time collaboration • Absolute clarity</p>
-  </div>
+        <div class="home-gallery glass-wide">
 
-  <!-- IMAGE SLIDER / CAROUSEL -->
-  <div class="image-slider glass">
-    <div class="slider-track">
-      <div class="slide"><img src="../assets/images/slider/img1.jpg" alt="Project 1"></div>
-      <div class="slide"><img src="../assets/images/slider/img2.jpg" alt="Project 2"></div>
-      <div class="slide"><img src="../assets/images/slider/img3.jpg" alt="Project 3"></div>
-      <div class="slide"><img src="../assets/images/slider/img4.jpg" alt="Project 4"></div>
-      <div class="slide"><img src="../assets/images/slider/img5.jpg" alt="Project 5"></div>
+  <h3 class="gallery-title">Behind the Scenes & Featured Work</h3>
+
+  <div class="gallery-track">
+    <div class="gallery-item">
+      <img src="../assets/images/gallery/work1.jpg" alt="Project 1">
+    </div>
+    <div class="gallery-item">
+      <img src="../assets/images/gallery/work2.jpg" alt="Project 2">
+    </div>
+    <div class="gallery-item">
+      <img src="../assets/images/gallery/work3.jpg" alt="Project 3">
+    </div>
+    <div class="gallery-item">
+      <img src="../assets/images/gallery/work4.jpg" alt="Project 4">
     </div>
   </div>
 
-  <!-- TRUST BAR -->
-  <div class="trust-bar glass">
-    <div class="trust-track">
-      <div class="trust-item">Netflix — 12 Projects</div>
-      <div class="trust-item">Apple — 9 Projects</div>
-      <div class="trust-item">Marvel — 7 Projects</div>
-      <div class="trust-item">Nike — 15 Projects</div>
-      <div class="trust-item">MTN — 11 Projects</div>
-      <div class="trust-item">Disney — 6 Projects</div>
-    </div>
-  </div>
+</div>
 
-</section>
-
-    <!-- CREATE PROJECT -->
-    <section id="create" class="section">
-      <div class="card glass">
-        <h2>Create New Project</h2>
-
-        <form class="project-form">
-          <input type="text" placeholder="Project Title" required>
-          <select required>
-            <option disabled selected>Project Type</option>
-            <option>Film Production</option>
-            <option>Brand Animation</option>
-            <option>Commercial</option>
-            <option>Photography</option>
-            <option>Virtual Production</option>
-          </select>
-          <textarea placeholder="Project Description" required></textarea>
-
-          <div class="upload">
-            <input type="file">
+        <div class="client-marquee glass">
+          <div class="marquee-track">
+            <span>Netflix · 14 Projects</span>
+            <span>Apple · 9 Projects</span>
+            <span>Marvel · 22 Projects</span>
+            <span>Google · 11 Projects</span>
+            <span>Amazon · 18 Projects</span>
           </div>
-
-          <button type="submit">Submit Project</button>
-        </form>
+        </div>
       </div>
     </section>
 
-    <!-- MY PROJECTS -->
-    <section id="projects" class="section">
+    <!-- CREATE -->
+    <section id="create" class="dashboard-section">
 
-      <div class="projects-grid">
+  <div class="create-wrapper">
 
-        <div class="project-card glass">
-          <h3>Brand Launch Film</h3>
-          <p>Status: <span class="status active">In Progress</span></p>
+    <h1 class="create-title">Create Project</h1>
+    <p class="create-subtitle">Together, let’s create your dream.</p>
 
-          <div class="progress-bar">
-            <div style="width: 65%"></div>
-          </div>
+    <form id="dashboardForm" class="dashboard-form refined">
 
-          <ul class="project-meta">
-            <li>Start: Jan 10</li>
-            <li>Deadline: Mar 15</li>
-            <li>Manager: Theory Studios</li>
-          </ul>
-
-          <button>View Details</button>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Project Name</label>
+          <input type="text" name="projectName" required>
         </div>
 
-        <div class="project-card glass">
-          <h3>Commercial Ad</h3>
-          <p>Status: <span class="status done">Completed</span></p>
-
-          <div class="progress-bar">
-            <div style="width: 100%"></div>
-          </div>
-
-          <ul class="project-meta">
-            <li>Delivered</li>
-            <li>Approved</li>
-          </ul>
-
-          <button>Download Files</button>
+        <div class="form-group">
+          <label>Project Type</label>
+          <select name="projectType" required>
+            <option value="" disabled selected>Select type</option>
+            <option>Brand Animation</option>
+            <option>Video Production</option>
+            <option>Photography</option>
+            <option>Virtual Production</option>
+          </select>
         </div>
-
       </div>
+
+      <!-- GLASS ONLY WHERE DEPTH IS NEEDED -->
+      <div class="form-group glass-focus">
+        <label>Project Overview</label>
+        <textarea name="projectDescription" rows="5" required></textarea>
+      </div>
+
+      <div class="form-group glass-focus">
+        <label class="file-drop-zone">
+          <input type="file" name="projectBrief" accept=".pdf,.doc,.docx" required>
+          <span>Upload Project Brief (PDF or DOC)</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn-primary submit-large">
+        Submit Project
+      </button>
+
+    </form>
+  </div>
+</section>
+
+
+    <!-- PROJECTS -->
+    <section id="projects" class="dashboard-section">
+      <h2 class="section-title">My Projects</h2>
+      <div id="projectsList" class="projects-grid">
+  <!-- Projects will load here dynamically -->
+</div>
+
+<!-- Optional empty state -->
+<div id="noProjectsMessage" class="glass-card empty" style="display:none;">
+  No projects yet. Create one to get started.
+</div>
 
     </section>
 
   </main>
 </div>
 
-<script src="../assets/js/dashboard.js"></script>
+<script type="module" src="../assets/js/dashboard.js"></script>
 </body>
 </html>
