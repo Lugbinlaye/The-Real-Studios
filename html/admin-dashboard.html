@@ -1,95 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard | Studiova</title>
-  <link rel="stylesheet" href="../assets/css/dashboard.css">
-  <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
+  <link rel="stylesheet" href="../assets/css/dashboard.css" />
+  <link rel="stylesheet" href="../assets/css/admin-dashboard.css" />
 </head>
 <body>
 
 <div class="dashboard-wrapper">
 
-  <!-- SIDEBAR -->
   <aside class="dashboard-sidebar">
     <div class="sidebar-logo">
-      <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
+      <img src="../assets/images/logos/logo-white.svg" alt="Studiova Logo" style="max-width: 100px;" />
     </div>
+
     <nav class="sidebar-nav">
-      <button data-section="home" class="nav-item active">Home</button>
-      <button data-section="projects" class="nav-item">Projects</button>
-      <button data-section="messages" class="nav-item">Messages</button>
-      <button id="logoutBtn" class="nav-item logout">Log Out</button>
+      <button class="nav-item active" data-section="home">Home</button>
+      <button class="nav-item" data-section="projects">Projects</button>
+      <button class="nav-item" data-section="inbox">Inbox</button>
+      <button class="nav-item logout" id="logoutBtn">Log Out</button>
     </nav>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="dashboard-main">
 
-    <!-- VIDEO BACKGROUND -->
     <video class="dashboard-video" autoplay muted loop playsinline>
       <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
     </video>
     <div class="dashboard-overlay"></div>
 
-    <!-- HOME SECTION -->
     <section id="home" class="dashboard-section active">
-      <h1 class="welcome-big">
-        Welcome Admin<br>
-        <span class="studio-name">Theory Studios</span>
-      </h1>
-
-      <div class="home-gallery glass-wide">
-        <!-- Optional: client logos or highlights -->
+      <div style="text-align: center; padding-top: 100px;">
+        <h1 class="welcome-big">
+          Welcome Admin<br>
+          <span class="studio-name">The Real Studios</span>
+        </h1>
       </div>
     </section>
 
-    <!-- PROJECTS SECTION -->
     <section id="projects" class="dashboard-section">
       <h2 class="section-title">All Projects</h2>
-      <div id="adminProjectsList" class="projects-grid"></div>
-
-      <!-- Project Detail Modal -->
-      <div id="projectDetailModal" class="modal glass-card hidden">
-        <button id="closeProjectModal" class="btn-close">✕</button>
-        <h3 id="modalProjectTitle"></h3>
-        <p><strong>Client:</strong> <span id="modalClientName"></span></p>
-        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
-        <p><strong>Progress:</strong> <span id="modalProgress"></span>%</p>
-        <p><strong>Description:</strong></p>
-        <p id="modalDescription"></p>
-
-        <label>Update Status:</label>
-        <select id="updateStatus">
-          <option value="Pending">Pending</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-        </select>
-
-        <label>Update Progress (%):</label>
-        <input type="number" id="updateProgress" min="0" max="100">
-
-        <label>Proposed Timeline / Notes:</label>
-        <textarea id="updateTimeline"></textarea>
-
-        <button id="saveProjectUpdate" class="btn-primary glass-btn">Save Updates</button>
-        <a id="downloadBrief" class="btn-primary glass-btn" href="#" target="_blank">Download Project Brief</a>
+      <div id="projectsList" class="projects-grid glass-wide">
+        <div class="glass-card loading">Loading projects…</div>
       </div>
     </section>
 
-    <!-- MESSAGES SECTION -->
-    <section id="messages" class="dashboard-section">
-      <h2 class="section-title">Client Messages</h2>
-      <div id="messagesList" class="messages-grid glass-wide">
-        <!-- Loaded dynamically -->
+    <div id="projectDetailModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+
+        <h3 class="modal-title">Project Title</h3>
+        <p style="opacity: 0.7;">Type: <span class="modal-type"></span></p>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+            <label>Update Status</label>
+            <select class="modal-status-update">
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+              <option value="On Hold">On Hold</option>
+            </select>
+
+            <label>Progress</label>
+            <input type="range" class="modal-progress" min="0" max="100" value="0" />
+
+            <button class="save-btn">Save Status Updates</button>
+        </div>
+
+        <label>Description</label>
+        <p class="modal-description" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;"></p>
+        
+        <p>
+          Project Brief: 
+          <a href="#" class="modal-file" target="_blank">Download File</a>
+        </p>
+
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 20px 0;" />
+
+        <h4>Conversation</h4>
+        <div id="projectMessages" class="messages-container"></div>
+
+        <div class="chat-controls" style="display: flex; gap: 10px; margin-top: 15px;">
+            <input type="text" id="quickReplyInput" placeholder="Type a message to client..." style="flex: 1; margin: 0;">
+            <button id="quickReplyBtn" style="background: #00ffc3; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer;">Send</button>
+        </div>
+
+      </div>
+    </div>
+
+    <section id="inbox" class="dashboard-section">
+      <h2 class="section-title">Client Inbox</h2>
+      <div id="adminInboxList" class="messages-grid glass-wide">
+        <div class="glass-card loading">Loading messages…</div>
       </div>
     </section>
 
   </main>
-
 </div>
 
 <script type="module" src="../assets/js/admin-dashboard.js"></script>
+
 </body>
 </html>

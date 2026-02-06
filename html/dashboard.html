@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Client Dashboard | Studiova</title>
+  <title>Client Dashboard | The Real Studios</title>
 
   <link rel="stylesheet" href="../assets/css/styles.css">
   <link rel="stylesheet" href="../assets/css/dashboard.css">
@@ -13,137 +13,95 @@
 
 <div class="dashboard-wrapper">
 
-  <!-- SIDEBAR -->
   <aside class="dashboard-sidebar">
-    <div class="sidebar-logo">
-      <img src="../assets/images/logos/logo-white.svg" alt="Studiova">
-    </div>
-
     <nav class="sidebar-nav">
       <button class="nav-item active" data-section="home">Home</button>
       <button class="nav-item" data-section="create">Create Project</button>
       <button class="nav-item" data-section="projects">My Projects</button>
+      <button class="nav-item" data-section="inbox">Inbox</button>
       <button id="logoutBtn" class="nav-item logout">Log Out</button>
     </nav>
   </aside>
 
-  <!-- MAIN -->
   <main class="dashboard-main">
 
-    <!-- VIDEO -->
     <video class="dashboard-video" autoplay muted loop playsinline>
       <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
     </video>
     <div class="dashboard-overlay"></div>
 
-    <!-- USER NAME -->
-    <div class="top-user">
-      <span id="userName">Client</span>
-    </div>
+  
+   <section id="home" class="dashboard-section active">
+  <div class="hero-container">
+    <img src="../assets/images/logo.png" alt="The Real Studios" class="hero-logo">
+    
+    <h2 id="homeWelcome" class="hero-welcome">Welcome, Creator</h2>
 
-    <!-- HOME -->
-    <section id="home" class="dashboard-section active">
-      <div class="home-center">
-        <h1 class="welcome-big">
-          CREATE YOUR DREAM<br>
-          <span class="studio-name"></span>
-        </h1>
-
-        <div class="home-gallery glass-wide">
-
-  <h3 class="gallery-title">Behind the Scenes & Featured Work</h3>
-
-  <div class="gallery-track">
-    <div class="gallery-item">
-      <img src="../assets/images/gallery/work1.jpg" alt="Project 1">
-    </div>
-    <div class="gallery-item">
-      <img src="../assets/images/gallery/work2.jpg" alt="Project 2">
-    </div>
-    <div class="gallery-item">
-      <img src="../assets/images/gallery/work3.jpg" alt="Project 3">
-    </div>
-    <div class="gallery-item">
-      <img src="../assets/images/gallery/work4.jpg" alt="Project 4">
-    </div>
-  </div>
-
-</div>
-
-        <div class="client-marquee glass">
-          <div class="marquee-track">
-            <span>Netflix · 14 Projects</span>
-            <span>Apple · 9 Projects</span>
-            <span>Marvel · 22 Projects</span>
-            <span>Google · 11 Projects</span>
-            <span>Amazon · 18 Projects</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CREATE -->
-    <section id="create" class="dashboard-section">
-
-  <div class="create-wrapper">
-
-    <h1 class="create-title">Create Project</h1>
-    <p class="create-subtitle">Together, let’s create your dream.</p>
-
-    <form id="dashboardForm" class="dashboard-form refined">
-
-      <div class="form-row">
-        <div class="form-group">
-          <label>Project Name</label>
-          <input type="text" name="projectName" required>
-        </div>
-
-        <div class="form-group">
-          <label>Project Type</label>
-          <select name="projectType" required>
-            <option value="" disabled selected>Select type</option>
-            <option>Brand Animation</option>
-            <option>Video Production</option>
-            <option>Photography</option>
-            <option>Virtual Production</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- GLASS ONLY WHERE DEPTH IS NEEDED -->
-      <div class="form-group glass-focus">
-        <label>Project Overview</label>
-        <textarea name="projectDescription" rows="5" required></textarea>
-      </div>
-
-      <div class="form-group glass-focus">
-        <label class="file-drop-zone">
-          <input type="file" name="projectBrief" accept=".pdf,.doc,.docx" required>
-          <span>Upload Project Brief (PDF or DOC)</span>
-        </label>
-      </div>
-
-      <button type="submit" class="btn-primary submit-large">
-        Submit Project
-      </button>
-
-    </form>
+    <h1 class="hero-tagline">
+      If you can dream it,<br>
+      <span class="text-highlight">we can create it.</span>
+    </h1>
   </div>
 </section>
 
+    <section id="create" class="dashboard-section">
+      <div class="create-wrapper">
+        <h1 class="create-title">Create Project</h1>
+        <p class="create-subtitle">Together, let’s create your dream.</p>
 
-    <!-- PROJECTS -->
+        <form id="dashboardForm" class="dashboard-form refined">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Project Name</label>
+              <input type="text" name="projectName" required>
+            </div>
+            <div class="form-group">
+              <label>Project Type</label>
+              <select name="projectType" required>
+                <option value="" disabled selected>Select type</option>
+                <option>Brand Animation</option>
+                <option>Video Production</option>
+                <option>Photography</option>
+                <option>Virtual Production</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group glass-focus">
+            <label>Project Overview</label>
+            <textarea name="projectDescription" rows="5" required></textarea>
+          </div>
+
+          <div class="form-group glass-focus">
+            <label class="file-drop-zone">
+              <input type="file" name="projectBrief" accept=".pdf,.doc,.docx" required>
+              <span>Upload Project Brief (PDF or DOC)</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn-primary submit-large">
+            Submit Project
+          </button>
+        </form>
+      </div>
+    </section>
+
     <section id="projects" class="dashboard-section">
       <h2 class="section-title">My Projects</h2>
       <div id="projectsList" class="projects-grid">
-  <!-- Projects will load here dynamically -->
-</div>
+        <div class="glass-card">Loading...</div>
+      </div>
+    </section>
 
-<!-- Optional empty state -->
-<div id="noProjectsMessage" class="glass-card empty" style="display:none;">
-  No projects yet. Create one to get started.
-</div>
+    <section id="projectDetails" class="dashboard-section">
+      <div id="projectDetailsContent" class="glass-card"></div>
+    </section>
 
+    <section id="inbox" class="dashboard-section">
+      <h2 class="section-title">Inbox</h2>
+      <div id="inboxList" class="projects-grid">
+        <div class="glass-card">Loading messages...</div>
+      </div>
     </section>
 
   </main>
