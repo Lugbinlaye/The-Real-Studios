@@ -38,7 +38,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100vh;
-  overflow: hidden;
+  overflow: hidden; /* Desktop: prevent body scroll, use container */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -57,7 +57,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===============================
-   SIDEBAR (Floating Tabs)
+   SIDEBAR (Desktop Vertical)
 ================================ */
 .dashboard-sidebar {
   width: 280px;
@@ -83,6 +83,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
+  justify-content: flex-start; /* Default alignment */
   position: relative;
   overflow: hidden;
 }
@@ -138,8 +139,6 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(180deg, rgba(10,10,10,0.8) 0%, rgba(10,10,10,0.95) 100%);
   z-index: -1;
 }
-
-
 
 /* ===============================
    SECTIONS & HEADINGS
@@ -233,8 +232,8 @@ input, select, textarea {
   font-size: 1rem;
   outline: none;
   transition: 0.3s;
-  margin-top: 8px; /* Global margin */
-  box-sizing: border-box; /* Important for alignment */
+  margin-top: 8px;
+  box-sizing: border-box;
 }
 
 input:focus, textarea:focus {
@@ -353,35 +352,34 @@ label {
   box-shadow: 0 5px 15px rgba(255, 59, 48, 0.3);
 }
 
-/* --- FIXED CHAT FOOTER & ALIGNMENT --- */
 .chat-footer {
   padding: 20px;
   background: rgba(0,0,0,0.3);
   border-top: 1px solid var(--glass-border);
   display: flex;
-  align-items: center; /* ALIGNMENT FIX 1: Vertically Center items */
+  align-items: center;
   gap: 15px;
 }
 
 .chat-footer input {
-  margin-top: 0; /* ALIGNMENT FIX 2: Remove global input top margin */
-  border-radius: 30px; /* Make it more chat-like */
+  margin-top: 0; 
+  border-radius: 30px; 
 }
 
 .send-btn {
   background: var(--primary);
   border: none;
   width: 50px; height: 50px;
-  border-radius: 50%; /* Make button circular */
+  border-radius: 50%; 
   color: #fff;
   font-size: 1.2rem;
   cursor: pointer;
   transition: 0.2s;
-  flex-shrink: 0; /* Prevent squashing */
+  flex-shrink: 0; 
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-left: 4px; /* Optical center for arrow */
+  padding-left: 4px; 
 }
 
 .send-btn:hover {
@@ -464,213 +462,109 @@ label {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 768px) {
-  .hero-logo { max-width: 300px; }
-  .hero-tagline { font-size: 2rem; }
-}
-
-/* ===============================
-   MOBILE RESPONSIVENESS (The Fix)
-================================ */
+/* =========================================================================
+   MOBILE APP MODE (The Final Fix)
+   Forces "Spotify/Instagram" Bottom Bar & Fixes Scrolling
+========================================================================= */
 @media (max-width: 768px) {
 
-  /* 1. Layout Changes */
-  .dashboard-wrapper {
-    flex-direction: column;
+  /* 1. WRAPPER & SCROLL FIX */
+  body, html {
+    overflow: hidden; /* Stop page bounce */
+    height: 100%;
   }
 
-  /* 2. Transform Sidebar to Bottom Nav */
+  .dashboard-wrapper {
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  /* 2. MAIN CONTENT AREA */
+  .dashboard-main {
+    width: 100%;
+    /* Height = Screen - Bottom Bar (70px) */
+    height: calc(100vh - 70px); 
+    overflow-y: auto; /* Enable scrolling inside */
+    padding: 20px;
+    padding-bottom: 100px; /* Space for content above bar */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll */
+  }
+
+  /* 3. SIDEBAR -> BOTTOM BAR */
   .dashboard-sidebar {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: auto;
-    flex-direction: row;
-    padding: 10px;
-    gap: 5px;
+    height: 70px;
+    
+    /* FORCE HORIZONTAL LAYOUT */
+    display: flex !important;
+    flex-direction: row !important; 
+    align-items: center;
+    justify-content: space-between;
+    
+    padding: 0;
+    margin: 0;
+    gap: 0;
+    
+    background: rgba(10, 10, 10, 0.95);
+    backdrop-filter: blur(20px);
     border-right: none;
-    border-top: 1px solid var(--glass-border);
-    background: rgba(10, 10, 10, 0.95); /* Darker background for readability */
-    justify-content: space-around;
-    z-index: 1000;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 9999;
   }
 
-  /* 3. Style Bottom Nav Buttons */
+  /* 4. NAV ITEMS (Buttons) */
   .nav-item {
-    padding: 10px;
-    font-size: 0.75rem; /* Smaller text */
-    flex-direction: column; /* Stack text/icon if we had icons */
+    flex: 1; /* Equal width */
+    height: 100%;
+    width: auto !important;
+    margin: 0 !important;
+    border-radius: 0;
+    
+    display: flex;
+    flex-direction: column; /* Icon/Text Stack */
     justify-content: center;
-    border-radius: 10px;
+    align-items: center;
     text-align: center;
-    flex: 1; /* Distribute space evenly */
-  }
-
-  .nav-item:hover {
-    transform: none; /* Disable hover movement on touch */
+    
+    font-size: 0.7rem;
+    padding: 0;
+    background: transparent !important;
   }
   
-  /* Hide the "Log Out" text or make it an icon to save space? 
-     For now let's keep it but make it small */
+  .nav-item:hover { transform: none; }
+
+  /* 5. ACTIVE STATE (Top Highlight) */
+  .nav-item.active {
+    border-left: none;
+    border-top: 3px solid var(--primary);
+    color: var(--primary);
+    background: linear-gradient(to bottom, rgba(255, 59, 48, 0.1), transparent) !important;
+    box-shadow: none;
+  }
+
+  /* 6. LOGOUT BUTTON */
   .nav-item.logout {
     margin-top: 0;
     border: none;
-    background: rgba(255, 59, 48, 0.1);
     color: #ff6b6b;
-  }
-
-  /* 4. Main Content Area */
-  .dashboard-main {
-    padding: 20px;
-    padding-bottom: 90px; /* Extra padding so content isn't hidden behind Bottom Nav */
-    width: 100%;
-  }
-
-  /* 5. Hero / Home Adjustments */
-  .hero-logo {
-    width: 70%;
-    margin-bottom: 20px;
-  }
-
-  .hero-welcome {
-    font-size: 1.2rem;
-  }
-
-  .hero-tagline {
-    font-size: 2rem;
-  }
-
-  /* 6. Card & Grid Adjustments */
-  .projects-grid {
-    grid-template-columns: 1fr; /* 1 column on mobile */
-  }
-
-  .glass-card {
-    padding: 20px;
-  }
-
-  .section-title {
-    font-size: 1.8rem;
-  }
-
-  /* 7. Chat Mobile Optimization */
-  .chat-container {
-    height: 75vh; /* Taller on mobile to see messages */
-    margin-top: 10px;
+    background: transparent;
+    border-left: 1px solid rgba(255,255,255,0.05);
   }
   
-  .chat-header {
-    padding: 15px;
-  }
-
-  .chat-footer {
-    padding: 15px;
-    gap: 10px;
-  }
-
-  .send-btn {
-    width: 45px; height: 45px;
-  }
-
-  /* 8. Hide the User Badge completely on mobile to save space */
-  .top-user {
-    display: none;
-  }
-}
-/* ===============================
-   MOBILE ONLY: HORIZONTAL BOTTOM BAR
-================================ */
-@media (max-width: 768px) {
-
-  /* 1. Wrapper: Stack vertically to fit mobile screen */
-  .dashboard-wrapper {
-    display: block; /* Simplifies layout for mobile */
-    height: auto;
-    min-height: 100vh;
-  }
-
-  /* 2. Sidebar transforms into Bottom Navigation Bar */
-  .dashboard-sidebar {
-    position: fixed;      /* Stick to screen */
-    bottom: 0;            /* Stick to bottom */
-    left: 0;
-    width: 100%;          /* Full width */
-    height: 70px;         /* Fixed height */
-    padding: 0;
-    margin: 0;
-    
-    /* HORIZONTAL LAYOUT */
-    display: flex;
-    flex-direction: row;  /* <--- Left to Right */
-    align-items: center;
-    justify-content: space-evenly; /* Spread buttons evenly */
-    
-    /* Design */
-    background: rgba(10, 10, 10, 0.95); /* Dark solid background */
-    backdrop-filter: blur(20px);
-    border-right: none;   /* Remove desktop border */
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 9999;        /* Always on top */
-  }
-
-  /* 3. Navigation Buttons */
-  .nav-item {
-    flex: 1;              /* All buttons take equal space */
-    height: 100%;         /* Full height of bar */
-    padding: 0;
-    margin: 0;
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    
-    font-size: 0.75rem;   /* Smaller text for mobile */
-    border-radius: 0;     /* Remove pill shape */
-    background: transparent;
-  }
-
-  /* 4. Active State (Top Highlight instead of Left) */
-  .nav-item.active {
-    background: transparent;
-    border-left: none;    /* Remove desktop border */
-    border-top: 3px solid var(--primary); /* Indicator on top */
-    color: var(--primary);
-    box-shadow: none;     /* Clean look */
-  }
-
-  /* 5. Logout Button (Sit nicely on the right) */
-  .nav-item.logout {
-    margin-top: 0;        /* Remove desktop "push to bottom" spacing */
-    border: none;
-    color: #ff6b6b;
-    background: transparent;
-    flex: 0.8;            /* Slightly smaller than other tabs */
-  }
-
-  /* 6. Main Content - Add padding so it doesn't hide behind the bar */
-  .dashboard-main {
-    padding: 20px;
-    padding-bottom: 100px; /* IMPORTANT: Space for bottom bar */
-    width: 100%;
-    height: auto;
-    overflow-y: visible;   /* Let the page scroll naturally */
-  }
-
-  /* 7. Hide Desktop-Specific Elements */
-  .top-user {
-    display: none;
-  }
-
-  /* 8. Fix Project Grid for small screens */
-  .projects-grid {
-    grid-template-columns: 1fr; /* Single column */
-    gap: 20px;
-  }
-
-  /* 9. Fix Chat Height */
+  /* 7. HIDE DESKTOP ELEMENTS */
+  .top-user { display: none; }
+  
+  /* 8. ADJUST HERO SIZES */
+  .hero-tagline { font-size: 1.8rem; }
+  .hero-logo { width: 60%; margin-bottom: 20px; }
+  
+  /* 9. CHAT SIZE */
   .chat-container {
-    height: 70vh; /* Taller chat on mobile */
+    height: 75vh;
   }
 }
