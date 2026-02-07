@@ -1,33 +1,12 @@
 console.log("Admin Dashboard JS loaded");
 
-/* ===============================
-   FIREBASE IMPORTS
-================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  query,
-  where,
-  addDoc,
-  doc,
-  updateDoc,
-  onSnapshot,
-  serverTimestamp,
-  orderBy,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import {
-  getStorage
-} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+import { getFirestore, collection, query, where, addDoc, doc, updateDoc, onSnapshot, serverTimestamp, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
 
 /* ===============================
-   FIREBASE INIT
+   FIREBASE CONFIG
 ================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyDFrIcY4Pv5BEu9r--kc1teKM5suy3uBP4",
@@ -37,10 +16,10 @@ const firebaseConfig = {
   messagingSenderId: "471233923515",
   appId: "1:471233923515:web:50d1a40713b18bfd6a5c9e"
 };
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 /* ===============================
    GLOBAL STATE
@@ -50,199 +29,218 @@ let projectsListener = null;
 let messagesListener = null;
 let adminInboxListener = null;
 
-// Stores the details of the currently opened project
-let activeModalProjectId = null;
-let activeModalClientId = null;
-
 /* ===============================
-   SIDEBAR / TAB NAVIGATION
+   AUTH & NAVIGATION
 ================================ */
-document.addEventListener("DOMContentLoaded", () => {
-  const navItems = document.querySelectorAll(".nav-item");
-  const sections = document.querySelectorAll(".dashboard-section");
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    window.location.href = "../html/sign-in.html";
+    return;
+  }
+  currentUserId = user.uid;
+});
 
-  navItems.forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.id === "logoutBtn") {
-        signOut(auth).then(() => window.location.href = "../html/auth.html");
-        return;
-      }
+document.querySelectorAll(".nav-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.id === "logoutBtn") {
+      signOut(auth).then(() => window.location.href = "../html/sign-in.html");
+      return;
+    }
 
-      const targetId = btn.dataset.section;
-      const targetSection = document.getElementById(targetId);
-      if (!targetSection) return;
+    // Handle Tab Switching
+    document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
 
-      navItems.forEach(b => b.classList.remove("active"));
-      sections.forEach(s => s.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.section).classList.add("active");
 
-      btn.classList.add("active");
-      targetSection.classList.add("active");
-
-      if (targetId === "projects") loadAdminProjects();
-      if (targetId === "inbox") startAdminInboxListener();
-    });
+    // Initialize Listeners based on tab
+    if (btn.dataset.section === "projects") loadAdminProjects();
+    if (btn.dataset.section === "inbox") startAdminInboxListener();
   });
 });
 
 /* ===============================
-   AUTH STATE
-================================ */
-onAuthStateChanged(auth, user => {
-  if (!user) {
-    window.location.href = "../html/auth.html";
-    return;
-  }
-  currentUserId = user.uid;
-  
-  // Auto-load projects if on projects tab
-  const projectsSection = document.getElementById("projects");
-  if (projectsSection?.classList.contains("active")) loadAdminProjects();
-});
-
-/* ===============================
-   LOAD ADMIN PROJECTS (REAL-TIME)
+   1. LOAD PROJECTS (Overview)
 ================================ */
 function loadAdminProjects() {
-  const projectsList = document.getElementById("projectsList");
-  if (!projectsList) return;
+  const list = document.getElementById("projectsList");
+  if (!list) return;
 
-  if (projectsListener) projectsListener(); // unsubscribe previous
-  projectsList.innerHTML = `<div class="glass-card loading">Loading projects…</div>`;
+  if (projectsListener) projectsListener();
+  list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading projects...</div>`;
 
   const q = query(collection(db, "projects"), orderBy("createdAt", "desc"));
 
   projectsListener = onSnapshot(q, snapshot => {
-    projectsList.innerHTML = "";
+    list.innerHTML = "";
     if (snapshot.empty) {
-      projectsList.innerHTML = `<div class="glass-card empty">No projects yet.</div>`;
+      list.innerHTML = `<div class="glass-card" style="text-align:center;">No projects found.</div>`;
       return;
     }
 
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       const card = document.createElement("div");
-      card.className = "glass-card project-card";
-      
-      // Basic styling for the card
+      card.className = "glass-card";
       card.style.cursor = "pointer";
-      
+
+      // Badge Color Logic
+      let badgeClass = "status-active";
+      if(data.status === "Pending") badgeClass = "status-pending";
+      if(data.status === "Completed") badgeClass = "status-red";
+
       card.innerHTML = `
-        <h3 class="project-title">${data.title}</h3>
-        <p class="type" style="color:#00ffc3;">${data.type}</p>
-        <p class="status">Status: <strong>${data.status || "Pending"}</strong></p>
-        <div class="progress-bar"><div class="progress" style="width:${data.progress || 0}%"></div></div>
-        <small class="last-updated">Client: ${data.userEmail || "Unknown"}</small>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+             <span class="status-badge ${badgeClass}">${data.type}</span>
+             <small style="opacity:0.6;">${data.userEmail}</small>
+        </div>
+        <h3>${data.title}</h3>
+        <div style="display:flex; justify-content:space-between; margin-top:15px; font-size:0.9rem;">
+            <span>Status: <strong style="color:var(--primary);">${data.status}</strong></span>
+            <span>${data.progress || 0}%</span>
+        </div>
+        <div class="progress-container">
+            <div class="progress-fill" style="width:${data.progress || 0}%"></div>
+        </div>
       `;
 
-      card.addEventListener("click", () => openProjectDetails(docSnap.id, data.userId));
-      projectsList.appendChild(card);
+      card.addEventListener("click", () => openProjectEditor(docSnap.id));
+      list.appendChild(card);
     });
-  }, err => {
-    console.error("Failed to load projects:", err);
   });
 }
 
 /* ===============================
-   PROJECT DETAILS MODAL
+   2. PROJECT EDITOR (Full Screen)
 ================================ */
-function openProjectDetails(projectId, clientUserId) {
-  const modal = document.getElementById("projectDetailModal");
-  if (!modal) return;
+function openProjectEditor(projectId) {
+  // 1. Switch View to Details Section
+  document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
+  document.getElementById("projectDetails").classList.add("active");
 
-  modal.style.display = "block";
-  
-  // Set Global State for Message Sending
-  activeModalProjectId = projectId;
-  activeModalClientId = clientUserId;
+  const container = document.getElementById("adminDetailsContent");
+  container.innerHTML = "Loading project data...";
 
   const docRef = doc(db, "projects", projectId);
 
-  // Load Project Data
-  onSnapshot(docRef, docSnap => {
+  onSnapshot(docRef, (docSnap) => {
     if (!docSnap.exists()) return;
-    const data = docSnap.data();
+    const p = docSnap.data();
 
-    modal.querySelector(".modal-title").textContent = data.title;
-    modal.querySelector(".modal-type").textContent = data.type;
-    modal.querySelector(".modal-status-update").value = data.status || "Pending";
-    modal.querySelector(".modal-progress").value = data.progress || 0;
-    modal.querySelector(".modal-description").textContent = data.description;
-    modal.querySelector(".modal-file").href = data.fileURL || "#";
+    // 2. Render Admin Interface
+    container.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+           <button id="backToProjects" class="glass-btn">← Back</button>
+           <h2 style="margin:0;">Manage Project</h2>
+           <a href="${p.fileURL}" target="_blank" class="glass-btn">View Brief</a>
+      </div>
+
+      <h3 style="margin-bottom:10px;">${p.title}</h3>
+      <p style="color:var(--text-muted); margin-bottom:30px;">${p.description}</p>
+
+      <div class="glass-card" style="margin-bottom: 30px; border:1px solid var(--primary);">
+           <h4 style="margin-bottom:15px; color:var(--primary);">Update Status & Progress</h4>
+           
+           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+               <div>
+                   <label>Current Status</label>
+                   <select id="adminStatusSelect">
+                       <option value="Pending" ${p.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                       <option value="In Progress" ${p.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                       <option value="Review" ${p.status === 'Review' ? 'selected' : ''}>Review</option>
+                       <option value="Completed" ${p.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                   </select>
+               </div>
+               <div>
+                   <label>Progress (${p.progress}%)</label>
+                   <input type="range" id="adminProgressSlider" min="0" max="100" value="${p.progress}">
+               </div>
+           </div>
+           
+           <button id="saveChangesBtn" class="btn-primary" style="margin-top:20px;">Save Updates</button>
+      </div>
+
+      <div class="chat-container">
+          <div class="chat-header">
+              <div class="avatar-circle">👤</div>
+              <div>
+                  <div style="font-weight:600;">Client Chat</div>
+                  <div style="font-size:0.8rem; opacity:0.7;">${p.userEmail}</div>
+              </div>
+          </div>
+          
+          <div id="projectMessages" class="chat-body">
+              <div style="text-align:center; opacity:0.5; margin-top:30px;">Loading history...</div>
+          </div>
+          
+          <div class="chat-footer">
+              <input type="text" id="adminChatInput" placeholder="Reply to client..." autocomplete="off">
+              <button id="adminSendBtn" class="send-btn">➤</button>
+          </div>
+      </div>
+    `;
+
+    // 3. Attach Listeners
+    
+    // Back Button
+    document.getElementById("backToProjects").onclick = () => {
+        document.querySelector('[data-section="projects"]').click();
+    };
+
+    // Save Changes
+    document.getElementById("saveChangesBtn").onclick = async () => {
+        const newStatus = document.getElementById("adminStatusSelect").value;
+        const newProgress = document.getElementById("adminProgressSlider").value;
+        
+        try {
+            await updateDoc(docRef, {
+                status: newStatus,
+                progress: parseInt(newProgress),
+                updatedAt: serverTimestamp()
+            });
+            alert("Project updated successfully!");
+        } catch(e) { console.error(e); alert("Update failed"); }
+    };
+
+    // Send Message
+    const sendBtn = document.getElementById("adminSendBtn");
+    const input = document.getElementById("adminChatInput");
+    
+    const sendMessage = async () => {
+        const text = input.value.trim();
+        if(!text) return;
+        
+        try {
+             await addDoc(collection(db, "messages"), {
+                 projectId: projectId,
+                 fromUserId: currentUserId,
+                 fromRole: "admin",
+                 toUserId: p.userId,
+                 message: text,
+                 read: false,
+                 createdAt: serverTimestamp()
+             });
+             input.value = "";
+        } catch(e) { console.error(e); }
+    };
+
+    sendBtn.onclick = sendMessage;
+    input.addEventListener("keypress", (e) => { if(e.key === "Enter") sendMessage(); });
+
+    // Load Chat History
+    loadMessages(projectId);
   });
-
-  // Load Messages
-  loadProjectMessages(projectId);
-
-  // Close Button
-  modal.querySelector(".close-btn").onclick = () => {
-    modal.style.display = "none";
-    activeModalProjectId = null;
-    activeModalClientId = null;
-  };
-
-  // 1. SAVE STATUS BUTTON Logic
-  const saveBtn = modal.querySelector(".save-btn");
-  // Clone to remove old listeners
-  const newSaveBtn = saveBtn.cloneNode(true);
-  saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-
-  newSaveBtn.onclick = async () => {
-    const status = modal.querySelector(".modal-status-update").value;
-    const progress = modal.querySelector(".modal-progress").value;
-
-    try {
-      await updateDoc(docRef, {
-        status,
-        progress: parseInt(progress),
-        updatedAt: serverTimestamp()
-      });
-      alert("Project status updated!");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update status.");
-    }
-  };
 }
 
 /* ===============================
-   CHAT LOGIC (SEND & RECEIVE)
+   3. CHAT MESSAGES
 ================================ */
+function loadMessages(projectId) {
+  const container = document.getElementById("projectMessages");
+  if (!container) return;
 
-// 1. Send Message Button (Quick Reply)
-document.getElementById("quickReplyBtn")?.addEventListener("click", async () => {
-    const input = document.getElementById("quickReplyInput");
-    const text = input.value.trim();
-
-    if (!text) return;
-    if (!activeModalProjectId || !activeModalClientId) {
-        alert("Error: No active project context.");
-        return;
-    }
-
-    try {
-        await addDoc(collection(db, "messages"), {
-            projectId: activeModalProjectId,
-            fromUserId: currentUserId,
-            fromRole: "admin", // <--- Critical for Client Dashboard to see this
-            toUserId: activeModalClientId, // <--- Critical for "My Messages"
-            message: text,
-            read: false,
-            createdAt: serverTimestamp()
-        });
-        
-        input.value = ""; // Clear input
-    } catch (e) {
-        console.error("Send error:", e);
-        alert("Could not send message.");
-    }
-});
-
-// 2. Load Messages into Modal
-function loadProjectMessages(projectId) {
-  const messagesContainer = document.getElementById("projectMessages");
-  if (!messagesContainer) return;
-
-  if (messagesListener) messagesListener(); // Unsub old
+  if (messagesListener) messagesListener();
 
   const q = query(
     collection(db, "messages"),
@@ -251,98 +249,109 @@ function loadProjectMessages(projectId) {
   );
 
   messagesListener = onSnapshot(q, snapshot => {
-    messagesContainer.innerHTML = "";
+    container.innerHTML = "";
     snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      const msgEl = document.createElement("div");
+      const m = docSnap.data();
+      const div = document.createElement("div");
       
-      const isAdmin = data.fromRole === "admin";
+      // Admin messages (Me) = Sent class (Right, Red)
+      // Client messages = Received class (Left, Glass)
+      const isMe = m.fromRole === "admin";
       
-      msgEl.style.padding = "8px 12px";
-      msgEl.style.marginBottom = "8px";
-      msgEl.style.borderRadius = "10px";
-      msgEl.style.maxWidth = "80%";
-      msgEl.style.fontSize = "0.9rem";
-      msgEl.style.clear = "both"; // specific for float behavior or flex
+      div.className = `message-bubble ${isMe ? 'sent' : 'received'}`;
+      div.textContent = m.message;
       
-      if (isAdmin) {
-          // Sent by Admin (Right side)
-          msgEl.style.marginLeft = "auto";
-          msgEl.style.background = "#00ffc3"; // Green accent
-          msgEl.style.color = "#000";
-          msgEl.textContent = `You: ${data.message}`;
-      } else {
-          // Sent by Client (Left side)
-          msgEl.style.marginRight = "auto";
-          msgEl.style.background = "rgba(255,255,255,0.1)";
-          msgEl.style.color = "#fff";
-          msgEl.textContent = `Client: ${data.message}`;
-      }
-
-      messagesContainer.appendChild(msgEl);
+      container.appendChild(div);
     });
-    // Auto-scroll to bottom
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    container.scrollTop = container.scrollHeight;
   });
 }
 
 /* ===============================
-   ADMIN INBOX LISTENER
+   4. ADMIN INBOX
 ================================ */
 function startAdminInboxListener() {
-  const inboxList = document.getElementById("adminInboxList");
-  if (!inboxList) return;
+  const list = document.getElementById("adminInboxList");
+  if (!list) return;
 
-  inboxList.innerHTML = `<div class="glass-card loading">Loading messages…</div>`;
   if (adminInboxListener) adminInboxListener();
+  list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading messages...</div>`;
 
-  const q = query(
-    collection(db, "messages"),
-    orderBy("createdAt", "desc")
-  );
+  // Get all messages ordered by time
+  const q = query(collection(db, "messages"), orderBy("createdAt", "desc"));
 
   adminInboxListener = onSnapshot(q, snapshot => {
-    inboxList.innerHTML = "";
+    list.innerHTML = "";
     if (snapshot.empty) {
-      inboxList.innerHTML = `<div class="glass-card empty">No messages.</div>`;
-      return;
+        list.innerHTML = `<div class="glass-card" style="text-align:center;">No messages found.</div>`;
+        return;
     }
 
     snapshot.forEach(docSnap => {
-      const msg = docSnap.data();
+      const m = docSnap.data();
       
       const item = document.createElement("div");
-      item.className = "glass-card inbox-item";
-      item.style.marginBottom = "10px";
-      item.style.padding = "15px";
+      item.className = "glass-card";
+      item.style.marginBottom = "15px";
+      item.style.padding = "20px";
       item.style.cursor = "pointer";
-      
-      // Visual indicator for unread client messages
-      if (!msg.read && msg.fromRole !== "admin") {
-          item.style.borderLeft = "4px solid #00ffc3";
+
+      // If unread and NOT from admin (meaning it's from a client)
+      if (!m.read && m.fromRole !== "admin") {
+          item.style.borderLeft = "4px solid #00ffc3"; 
+          item.style.background = "rgba(0, 255, 195, 0.05)";
       }
 
-      const senderName = msg.fromRole === "admin" ? "You (Admin)" : "Client";
+      const senderLabel = m.fromRole === "admin" ? "You sent" : "Client Message";
 
       item.innerHTML = `
-        <h4 style="margin:0 0 5px 0; color: #00ffc3;">${senderName}</h4>
-        <p style="margin:0; opacity: 0.8;">${msg.message}</p>
-        <small style="opacity: 0.5; font-size: 0.7rem;">${msg.createdAt?.toDate?.().toLocaleString() || ""}</small>
+        <h4 style="margin:0 0 5px 0; color:var(--primary);">${senderLabel}</h4>
+        <p style="margin:0; opacity:0.9;">${m.message}</p>
+        <small style="opacity:0.5;">${m.createdAt?.toDate().toLocaleString()}</small>
       `;
-      
+
       item.onclick = () => {
-        // If message is from Admin, toUserId is Client. If from Client, fromUserId is Client.
-        const targetClientId = msg.fromRole === "admin" ? msg.toUserId : msg.fromUserId;
-        
-        openProjectDetails(msg.projectId, targetClientId);
-
-        // Mark as read if from client
-        if (!msg.read && msg.fromRole !== "admin") {
-           updateDoc(doc(db, "messages", docSnap.id), { read: true });
-        }
+         // Open the project associated with this message
+         openProjectEditor(m.projectId);
+         
+         // If it was a client message, mark as read
+         if (!m.read && m.fromRole !== "admin") {
+             updateDoc(doc(db, "messages", docSnap.id), { read: true });
+         }
       };
-
-      inboxList.appendChild(item);
+      
+      list.appendChild(item);
     });
   });
 }
+
+/* ===============================
+   ADMIN STATUS TOGGLE
+================================ */
+const statusBtn = document.getElementById("toggleStatusBtn");
+const statusInd = document.getElementById("adminStatusIndicator");
+
+// 1. Listen to Real-Time Status
+onSnapshot(doc(db, "config", "adminStatus"), (snap) => {
+    if (snap.exists()) {
+        const isOnline = snap.data().online;
+        if (isOnline) {
+            statusInd.className = "status-dot online";
+            statusInd.style.background = "#00ffc3";
+            statusInd.style.boxShadow = "0 0 10px #00ffc3";
+        } else {
+            statusInd.className = "status-dot offline";
+            statusInd.style.background = "#ff3b30";
+            statusInd.style.boxShadow = "0 0 10px #ff3b30";
+        }
+    }
+});
+
+// 2. Toggle Status on Click
+statusBtn.addEventListener("click", async () => {
+    const snap = await getDoc(doc(db, "config", "adminStatus"));
+    if (snap.exists()) {
+        const current = snap.data().online;
+        await updateDoc(doc(db, "config", "adminStatus"), { online: !current });
+    }
+});

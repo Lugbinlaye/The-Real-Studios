@@ -581,3 +581,22 @@ label {
   /* 10. CHAT SIZE */
   .chat-container { height: 75vh; }
 }
+
+/* Add to dashboard.css */
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  background-color: #666;
+  transition: all 0.3s ease;
+}
+
+/* Style for the Auto-Reply message */
+.message-bubble.received {
+  /* Existing styles... */
+}
+
+/* Optional: Make auto-replies look slightly different */
+/* You can target specific text content or just leave as 'received' */

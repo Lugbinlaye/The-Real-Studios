@@ -53,6 +53,7 @@ let currentUserId = null;
 let projectsUnsub = null;
 let messagesUnsub = null;
 let inboxUnsub = null;
+let isAdminOnline = false; // Tracks if admin is online
 
 // ⚠️ IMPORTANT: Paste your Admin UID here
 const ADMIN_UID = "aMXaGE0upecbXpdhR6t6qQEMDLH3"; 
@@ -78,7 +79,6 @@ onAuthStateChanged(auth, async (user) => {
           
           if (userSnap.exists()) {
               const userData = userSnap.data();
-              // Checks for 'name', 'fullName', or 'firstName' fields
               realName = userData.name || userData.fullName || userData.firstName;
           }
       } catch (error) {
@@ -86,16 +86,14 @@ onAuthStateChanged(auth, async (user) => {
       }
   }
 
-  // 3. Final Fallback: If still no name, use Email Prefix
+  // 3. Final Fallback
   const finalDisplayName = realName || user.email.split("@")[0];
 
-  // UPDATE UI: Big Home Page Welcome
   const homeWelcomeEl = document.getElementById("homeWelcome");
   if (homeWelcomeEl) {
       homeWelcomeEl.textContent = `Welcome, ${finalDisplayName}`;
   }
 
-  // Load Projects if active
   if (document.getElementById("projects")?.classList.contains("active")) {
     startProjectsListener();
   }
@@ -106,16 +104,12 @@ onAuthStateChanged(auth, async (user) => {
 ================================ */
 document.querySelectorAll(".nav-item").forEach(btn => {
   btn.addEventListener("click", () => {
-    
-    // --- UPDATED LOGOUT LOGIC ---
     if (btn.id === "logoutBtn") {
       signOut(auth).then(() => {
-          // Redirect specifically to Sign In page
           window.location.href = "../html/sign-in.html";
       });
       return;
     }
-    // ----------------------------
 
     document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
@@ -181,7 +175,7 @@ dashboardForm?.addEventListener("submit", async e => {
     alert("Submission failed.");
   } finally {
     btn.textContent = originalText;
-    btn.style.background = ""; // Reset to CSS
+    btn.style.background = ""; 
     btn.disabled = false;
   }
 });
@@ -213,7 +207,6 @@ function startProjectsListener() {
       const card = document.createElement("div");
       card.className = "glass-card project-card";
       
-      // Determine badge class
       let badgeClass = "status-active";
       if(p.status === "Pending") badgeClass = "status-pending";
       
@@ -238,12 +231,11 @@ function startProjectsListener() {
 }
 
 /* ===============================
-   PROJECT DETAILS & CHAT
+   PROJECT DETAILS & CHAT (UPDATED)
 ================================ */
 async function openProjectDetails(projectId) {
   if (!currentUserId) return;
 
-  // Switch View
   document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
   document.getElementById("projectDetails").classList.add("active");
 
@@ -259,7 +251,7 @@ async function openProjectDetails(projectId) {
       }
       const p = snap.data();
 
-      // Render the Professional Red Layout
+      // RENDER DETAILS + CHAT UI
       container.innerHTML = `
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
              <button id="backBtn" class="glass-btn">← Back</button>
@@ -283,7 +275,10 @@ async function openProjectDetails(projectId) {
                 <div class="avatar-circle">🤖</div>
                 <div>
                     <div style="font-weight:600;">Admin Support</div>
-                    <div style="font-size:0.8rem; color:#00ff88;">● Online</div>
+                    <div id="adminStatusDisplay" style="font-size:0.8rem; display:flex; align-items:center; gap:5px;">
+                        <span class="status-dot"></span> 
+                        <span id="statusText">Checking...</span>
+                    </div>
                 </div>
             </div>
             
@@ -300,6 +295,29 @@ async function openProjectDetails(projectId) {
         </div>
       `;
 
+      // 1. LISTEN TO ADMIN STATUS (For UI)
+      onSnapshot(doc(db, "config", "adminStatus"), (statusSnap) => {
+          if (statusSnap.exists()) {
+              isAdminOnline = statusSnap.data().online;
+              const dot = container.querySelector(".status-dot");
+              const text = container.querySelector("#statusText");
+              
+              if (dot && text) {
+                if (isAdminOnline) {
+                    dot.style.background = "#00ffc3"; // Green
+                    dot.style.boxShadow = "0 0 8px #00ffc3";
+                    text.textContent = "Online";
+                    text.style.color = "#00ffc3";
+                } else {
+                    dot.style.background = "#ff3b30"; // Red
+                    dot.style.boxShadow = "0 0 8px #ff3b30";
+                    text.textContent = "Away (Auto-Reply On)";
+                    text.style.color = "#ff3b30";
+                }
+              }
+          }
+      });
+
       // Back Button
       document.getElementById("backBtn").onclick = () => {
         document.getElementById("projects").classList.add("active");
@@ -310,22 +328,26 @@ async function openProjectDetails(projectId) {
       // Start Chat Listener
       startChatListener(projectId);
 
-      // Send Logic
+      // Send Logic - PASS PROJECT DATA (p) FOR EMAIL
       const sendBtn = document.getElementById("sendClientMsgBtn");
       const input = document.getElementById("clientMessageInput");
 
-      sendBtn.onclick = () => sendMessage(projectId, input);
+      sendBtn.onclick = () => sendMessage(projectId, input, p);
       input.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") sendMessage(projectId, input);
+          if (e.key === "Enter") sendMessage(projectId, input, p);
       });
   });
 }
 
-async function sendMessage(projectId, input) {
+/* ===============================
+   SEND MESSAGE (With Auto-Reply & Email)
+================================ */
+async function sendMessage(projectId, input, projectData) {
     const text = input.value.trim();
     if (!text) return;
 
     try {
+        // 1. Save Client Message to Database
         await addDoc(collection(db, "messages"), {
           projectId,
           fromUserId: currentUserId,
@@ -335,7 +357,50 @@ async function sendMessage(projectId, input) {
           read: false,
           createdAt: serverTimestamp()
         });
-        input.value = "";
+        
+        input.value = ""; // Clear input
+
+        // 2. IF ADMIN IS OFFLINE -> TRIGGER EMAIL & AUTO-REPLY
+        if (!isAdminOnline) {
+            
+            // A. Send Auto-Reply to Chat (Simulated Admin)
+            setTimeout(async () => {
+                await addDoc(collection(db, "messages"), {
+                    projectId,
+                    fromUserId: "SYSTEM",
+                    fromRole: "admin", 
+                    toUserId: currentUserId,
+                    message: "Auto-Reply: I am currently offline. I have received your message via email and will get back to you shortly.",
+                    read: true,
+                    isAutoReply: true,
+                    createdAt: serverTimestamp()
+                });
+            }, 1000); 
+
+            // B. TRIGGER FIREBASE EMAIL EXTENSION
+            // We write to the 'mail' collection, the extension handles the rest.
+            await addDoc(collection(db, "mail"), {
+                to: ["info@therealstudios.art"], // <--- REPLACE THIS WITH YOUR EMAIL
+                message: {
+                    subject: `New Message: ${projectData.title}`,
+                    html: `
+                        <h2>New Client Message</h2>
+                        <p><strong>Client:</strong> ${auth.currentUser.displayName || auth.currentUser.email}</p>
+                        <p><strong>Project:</strong> ${projectData.title}</p>
+                        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                        <hr>
+                        <p><strong>Message:</strong></p>
+                        <blockquote style="background: #f9f9f9; padding: 15px; border-left: 5px solid #FF3B30;">
+                           ${text}
+                        </blockquote>
+                        <br>
+                        <p><a href="${projectData.fileURL}" style="background:#000; color:#fff; padding:10px; text-decoration:none;">View Project Brief</a></p>
+                    `
+                }
+            });
+            console.log("Offline email request sent to system.");
+        }
+
     } catch (e) {
         console.error("Message failed:", e);
     }
@@ -361,7 +426,6 @@ function startChatListener(projectId) {
         const isAdmin = m.fromRole === "admin";
         
         div.className = `message-bubble ${isAdmin ? 'received' : 'sent'}`;
-        
         div.textContent = m.message;
         
         msgBox.appendChild(div);
@@ -408,7 +472,6 @@ function startInboxListener() {
       item.style.padding = "20px";
       item.style.transition = "transform 0.2s";
       
-      // Red left border for unread
       if(!m.read) {
           item.style.borderLeft = "5px solid #FF3B30"; 
           item.style.background = "rgba(255, 59, 48, 0.05)";
