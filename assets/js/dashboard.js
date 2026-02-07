@@ -1,10 +1,37 @@
 console.log("Client Dashboard JS loaded");
 
+/* ===============================
+   FIREBASE IMPORTS
+================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-import { getFirestore, collection, query, where, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  addDoc,
+  onSnapshot,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.6.0/firebase-storage.js";
 
+/* ===============================
+   FIREBASE CONFIG
+================================ */
 const firebaseConfig = {
   apiKey: "AIzaSyDFrIcY4Pv5BEu9r--kc1teKM5suy3uBP4",
   authDomain: "the-real-studio.firebaseapp.com",
@@ -19,10 +46,15 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+/* ===============================
+   GLOBAL STATE
+================================ */
 let currentUserId = null;
 let projectsUnsub = null;
 let messagesUnsub = null;
 let inboxUnsub = null;
+
+// ⚠️ IMPORTANT: Paste your Admin UID here
 const ADMIN_UID = "aMXaGE0upecbXpdhR6t6qQEMDLH3"; 
 
 /* ===============================
@@ -57,10 +89,6 @@ onAuthStateChanged(auth, async (user) => {
   // 3. Final Fallback: If still no name, use Email Prefix
   const finalDisplayName = realName || user.email.split("@")[0];
 
-  // UPDATE UI: Top Right Badge
-  const nameEl = document.getElementById("userName");
-  if (nameEl) nameEl.textContent = finalDisplayName;
-
   // UPDATE UI: Big Home Page Welcome
   const homeWelcomeEl = document.getElementById("homeWelcome");
   if (homeWelcomeEl) {
@@ -73,36 +101,59 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-/* NAV */
+/* ===============================
+   NAVIGATION
+================================ */
 document.querySelectorAll(".nav-item").forEach(btn => {
   btn.addEventListener("click", () => {
-    if (btn.id === "logoutBtn") { signOut(auth).then(() => location.href = "../html/auth.html"); return; }
     
+    // --- UPDATED LOGOUT LOGIC ---
+    if (btn.id === "logoutBtn") {
+      signOut(auth).then(() => {
+          // Redirect specifically to Sign In page
+          window.location.href = "../html/sign-in.html";
+      });
+      return;
+    }
+    // ----------------------------
+
     document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
     document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
-    
+
     btn.classList.add("active");
-    document.getElementById(btn.dataset.section)?.classList.add("active");
-    
+    const targetSection = document.getElementById(btn.dataset.section);
+    if(targetSection) targetSection.classList.add("active");
+
     stopAllListeners();
+
     if (btn.dataset.section === "projects") startProjectsListener();
     if (btn.dataset.section === "inbox") startInboxListener();
   });
 });
 
-/* CREATE PROJECT */
+/* ===============================
+   PROJECT SUBMISSION
+================================ */
 const dashboardForm = document.getElementById("dashboardForm");
 dashboardForm?.addEventListener("submit", async e => {
   e.preventDefault();
+  if (!currentUserId) return;
+
   const title = dashboardForm.projectName.value.trim();
   const type = dashboardForm.projectType.value;
   const description = dashboardForm.projectDescription.value.trim();
   const file = dashboardForm.projectBrief.files[0];
 
-  if (!title || !type || !description || !file) return alert("Please complete all fields.");
+  if (!title || !type || !description || !file) {
+    alert("Please complete all fields.");
+    return;
+  }
 
   const btn = dashboardForm.querySelector("button[type='submit']");
-  btn.textContent = "Uploading..."; btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = "Uploading...";
+  btn.style.background = "#999"; 
+  btn.disabled = true;
 
   try {
     const fileRef = ref(storage, `briefs/${currentUserId}_${Date.now()}_${file.name}`);
@@ -110,95 +161,123 @@ dashboardForm?.addEventListener("submit", async e => {
     const fileURL = await getDownloadURL(fileRef);
 
     await addDoc(collection(db, "projects"), {
-      userId: currentUserId, userEmail: auth.currentUser.email,
-      title, type, description, fileURL, status: "Pending", progress: 0,
-      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      userId: currentUserId,
+      userEmail: auth.currentUser.email,
+      title,
+      type,
+      description,
+      fileURL,
+      status: "Pending",
+      progress: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
-    
-    alert("Project submitted successfully!");
+
+    alert("Project submitted successfully! 🚀");
     dashboardForm.reset();
     document.querySelector('[data-section="projects"]').click();
-  } catch (err) { console.error(err); alert("Error submitting project."); }
-  finally { btn.textContent = "Submit Project"; btn.disabled = false; }
+  } catch (err) {
+    console.error(err);
+    alert("Submission failed.");
+  } finally {
+    btn.textContent = originalText;
+    btn.style.background = ""; // Reset to CSS
+    btn.disabled = false;
+  }
 });
 
-/* PROJECTS LIST */
+/* ===============================
+   PROJECTS LISTENER
+================================ */
 function startProjectsListener() {
   const list = document.getElementById("projectsList");
   if (!list || !currentUserId) return;
 
-  list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading...</div>`;
+  list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading projects...</div>`;
 
-  const q = query(collection(db, "projects"), where("userId", "==", currentUserId), orderBy("createdAt", "desc"));
+  const q = query(
+    collection(db, "projects"),
+    where("userId", "==", currentUserId),
+    orderBy("createdAt", "desc")
+  );
 
   projectsUnsub = onSnapshot(q, snap => {
     list.innerHTML = "";
-    if (snap.empty) { list.innerHTML = `<div class="glass-card" style="text-align:center;">No projects found.</div>`; return; }
+    if (snap.empty) {
+      list.innerHTML = `<div class="glass-card" style="text-align:center;">No projects found. <br><br> Start by creating a new one!</div>`;
+      return;
+    }
 
     snap.forEach(docSnap => {
       const p = docSnap.data();
       const card = document.createElement("div");
-      card.className = "glass-card";
-      card.style.cursor = "pointer";
+      card.className = "glass-card project-card";
       
       // Determine badge class
       let badgeClass = "status-active";
       if(p.status === "Pending") badgeClass = "status-pending";
       
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-           <span class="status-badge ${badgeClass}">${p.type}</span>
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+            <h3 style="margin-top:0;">${p.title}</h3>
+            <span class="status-badge ${badgeClass}">${p.type}</span>
         </div>
-        <h3>${p.title}</h3>
-        <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Status: <span style="color:#fff;">${p.status}</span></p>
-        
-        <div class="progress-container">
-          <div class="progress-fill" style="width:${p.progress || 0}%;"></div>
+        <p style="margin-bottom:5px; color:#ccc;">Status: <strong style="color: #FF3B30;">${p.status}</strong></p>
+        <div class="progress-bar">
+          <div class="progress" style="width:${p.progress || 0}%;"></div>
         </div>
       `;
       card.onclick = () => openProjectDetails(docSnap.id);
       list.appendChild(card);
     });
-  }, (err) => {
-    if(err.code === 'failed-precondition') list.innerHTML = `<div class="glass-card" style="border:1px solid red;">Missing Index. Check Console.</div>`;
+  }, (error) => {
+      if(error.code === 'failed-precondition') {
+          list.innerHTML = `<div class="glass-card error" style="border:1px solid #FF3B30;"><strong>Action Required:</strong> Check Browser Console for Firebase Index Link.</div>`;
+      }
   });
 }
 
-/* DETAILS & CHAT */
+/* ===============================
+   PROJECT DETAILS & CHAT
+================================ */
 async function openProjectDetails(projectId) {
   if (!currentUserId) return;
 
+  // Switch View
   document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
   document.getElementById("projectDetails").classList.add("active");
 
   const container = document.getElementById("projectDetailsContent");
-  container.innerHTML = "Loading...";
+  container.innerHTML = "Loading project details...";
 
-  onSnapshot(doc(db, "projects", projectId), (snap) => {
-      if (!snap.exists()) { container.innerHTML = "Project not found."; return; }
+  const docRef = doc(db, "projects", projectId);
+  
+  onSnapshot(docRef, (snap) => {
+      if (!snap.exists()) {
+        container.innerHTML = "Project not found.";
+        return;
+      }
       const p = snap.data();
 
+      // Render the Professional Red Layout
       container.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-           <button id="backBtn" class="glass-btn">← Back</button>
-           <a href="${p.fileURL}" target="_blank" class="glass-btn">View Brief</a>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+             <button id="backBtn" class="glass-btn">← Back</button>
+             <h2 style="margin:0; text-shadow: 0 0 10px rgba(255,59,48,0.4);">${p.title}</h2>
+             <a href="${p.fileURL}" target="_blank" class="glass-btn" style="font-size:0.8rem;">Brief ⬇</a>
         </div>
 
-        <h2 style="font-size:3rem; margin-bottom:10px;">${p.title}</h2>
-        <p style="color:var(--text-muted); max-width:600px; margin-bottom:30px; line-height:1.6;">${p.description}</p>
-        
-        <div class="glass-card" style="margin-bottom:40px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <span style="font-weight:600;">PROJECT PROGRESS</span>
-                <span style="color:var(--primary); font-weight:bold;">${p.progress}%</span>
-            </div>
-            <div class="progress-container">
+        <div class="glass-card" style="margin-bottom: 25px;">
+             <p style="opacity:0.8; margin-bottom:15px; line-height:1.6;">${p.description}</p>
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Status: <strong style="color:#FF3B30; text-transform:uppercase; letter-spacing:1px;">${p.status}</strong></span>
+                <span>${p.progress}% Complete</span>
+             </div>
+             <div class="progress-container">
                 <div class="progress-fill" style="width:${p.progress || 0}%;"></div>
-            </div>
-            <div style="margin-top:15px; font-size:0.9rem; color:var(--text-muted);">Current Status: <span style="color:#fff;">${p.status}</span></div>
+             </div>
         </div>
 
-        <h3 style="margin-bottom:20px;">Discussion</h3>
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar-circle">🤖</div>
@@ -209,71 +288,116 @@ async function openProjectDetails(projectId) {
             </div>
             
             <div id="messagesContainer" class="chat-body">
-                <div style="text-align:center; opacity:0.3; margin-top:50px;">Start of conversation</div>
+                <div style="text-align:center; opacity:0.5; margin-top:30px;">
+                    Starting secure connection...
+                </div>
             </div>
             
             <div class="chat-footer">
-                <input type="text" id="clientMessageInput" placeholder="Type a message..." autocomplete="off">
+                <input type="text" id="clientMessageInput" placeholder="Type your message..." autocomplete="off">
                 <button id="sendClientMsgBtn" class="send-btn">➤</button>
             </div>
         </div>
       `;
 
+      // Back Button
       document.getElementById("backBtn").onclick = () => {
         document.getElementById("projects").classList.add("active");
         document.getElementById("projectDetails").classList.remove("active");
         if(messagesUnsub) messagesUnsub();
       };
 
+      // Start Chat Listener
       startChatListener(projectId);
 
+      // Send Logic
       const sendBtn = document.getElementById("sendClientMsgBtn");
       const input = document.getElementById("clientMessageInput");
-      const send = async () => {
-          const text = input.value.trim();
-          if(!text) return;
-          try {
-             await addDoc(collection(db, "messages"), {
-               projectId, fromUserId: currentUserId, fromRole: "client", toUserId: ADMIN_UID,
-               message: text, read: false, createdAt: serverTimestamp()
-             });
-             input.value = "";
-          } catch(e) { console.error(e); }
-      };
-      
-      sendBtn.onclick = send;
-      input.addEventListener("keypress", (e) => { if(e.key==="Enter") send(); });
+
+      sendBtn.onclick = () => sendMessage(projectId, input);
+      input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") sendMessage(projectId, input);
+      });
   });
+}
+
+async function sendMessage(projectId, input) {
+    const text = input.value.trim();
+    if (!text) return;
+
+    try {
+        await addDoc(collection(db, "messages"), {
+          projectId,
+          fromUserId: currentUserId,
+          fromRole: "client",
+          toUserId: ADMIN_UID,
+          message: text,
+          read: false,
+          createdAt: serverTimestamp()
+        });
+        input.value = "";
+    } catch (e) {
+        console.error("Message failed:", e);
+    }
 }
 
 function startChatListener(projectId) {
     if (messagesUnsub) messagesUnsub();
-    const q = query(collection(db, "messages"), where("projectId", "==", projectId), orderBy("createdAt", "asc"));
+
+    const messagesRef = query(
+      collection(db, "messages"),
+      where("projectId", "==", projectId),
+      orderBy("createdAt", "asc")
+    );
+  
     const msgBox = document.getElementById("messagesContainer");
   
-    messagesUnsub = onSnapshot(q, (snap) => {
+    messagesUnsub = onSnapshot(messagesRef, (snap) => {
       if (!snap.empty) msgBox.innerHTML = "";
+      
       snap.forEach(d => {
         const m = d.data();
         const div = document.createElement("div");
-        div.className = `message-bubble ${m.fromRole === "admin" ? 'received' : 'sent'}`;
+        const isAdmin = m.fromRole === "admin";
+        
+        div.className = `message-bubble ${isAdmin ? 'received' : 'sent'}`;
+        
         div.textContent = m.message;
+        
         msgBox.appendChild(div);
       });
+      
       msgBox.scrollTop = msgBox.scrollHeight;
+      
+    }, (error) => {
+        if(error.code === 'failed-precondition') {
+            msgBox.innerHTML = `<div style="text-align:center; color:#FF3B30;">Missing Index. Check Console.</div>`;
+        }
     });
 }
 
-/* INBOX */
+/* ===============================
+   INBOX LISTENER
+================================ */
 function startInboxListener() {
   const list = document.getElementById("inboxList");
-  if (!list) return;
-  list.innerHTML = `<div class="glass-card">Loading...</div>`;
-  const q = query(collection(db, "messages"), where("toUserId", "==", currentUserId), where("fromRole", "==", "admin"), orderBy("createdAt", "desc"));
+  if (!list || !currentUserId) return;
+
+  list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading inbox...</div>`;
+
+  const q = query(
+    collection(db, "messages"),
+    where("toUserId", "==", currentUserId),
+    where("fromRole", "==", "admin"),
+    orderBy("createdAt", "desc")
+  );
 
   inboxUnsub = onSnapshot(q, snap => {
     list.innerHTML = "";
-    if (snap.empty) { list.innerHTML = `<div class="glass-card">No messages.</div>`; return; }
+    if (snap.empty) {
+      list.innerHTML = `<div class="glass-card" style="text-align:center;">Inbox is empty.</div>`;
+      return;
+    }
 
     snap.forEach(d => {
       const m = d.data();
@@ -281,16 +405,27 @@ function startInboxListener() {
       item.className = "glass-card";
       item.style.cursor = "pointer";
       item.style.marginBottom = "15px";
-      if(!m.read) item.style.borderLeft = "4px solid var(--primary)";
+      item.style.padding = "20px";
+      item.style.transition = "transform 0.2s";
       
+      // Red left border for unread
+      if(!m.read) {
+          item.style.borderLeft = "5px solid #FF3B30"; 
+          item.style.background = "rgba(255, 59, 48, 0.05)";
+      }
+      
+      item.onmouseover = () => item.style.transform = "translateX(5px)";
+      item.onmouseout = () => item.style.transform = "translateX(0)";
+
       item.innerHTML = `
-        <h4 style="color:var(--primary); margin-bottom:5px;">Admin Message</h4>
-        <p>${m.message}</p>
-        <small style="opacity:0.5;">${m.createdAt?.toDate().toLocaleString()}</small>
+        <h4 style="margin:0 0 5px 0; color:#FF3B30;">From Admin</h4>
+        <p style="margin:0; opacity:0.9;">${m.message}</p>
+        <small style="opacity:0.5; font-size:0.8rem;">${m.createdAt?.toDate().toLocaleString()}</small>
       `;
+      
       item.onclick = async () => {
-         openProjectDetails(m.projectId);
-         if (!m.read) updateDoc(doc(db, "messages", d.id), { read: true });
+        openProjectDetails(m.projectId);
+        if (!m.read) updateDoc(doc(db, "messages", d.id), { read: true });
       };
       list.appendChild(item);
     });

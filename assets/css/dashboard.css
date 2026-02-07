@@ -66,10 +66,18 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(20px);
   border-right: 1px solid var(--glass-border);
   padding: 40px 25px;
+  /* Note: The sidebar itself is a flex container */
   display: flex;
   flex-direction: column;
-  gap: 15px;
   z-index: 20;
+}
+
+/* CRITICAL: Target the nav container inside the sidebar */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column; /* Vertical on Desktop */
+  gap: 15px;
+  height: 100%;
 }
 
 .nav-item {
@@ -86,6 +94,8 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   position: relative;
   overflow: hidden;
+  width: 100%; /* Ensure full width in sidebar */
+  box-sizing: border-box;
 }
 
 .nav-item:hover {
@@ -462,9 +472,9 @@ label {
   to { opacity: 1; transform: translateY(0); }
 }
 
-
 /* =========================================================================
    MOBILE ONLY: BOTTOM NAVIGATION BAR (SIDE BY SIDE)
+   Strictly enforced for screens < 768px
 ========================================================================= */
 @media (max-width: 768px) {
 
@@ -492,7 +502,7 @@ label {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* 3. SIDEBAR -> HORIZONTAL BOTTOM BAR */
+  /* 3. SIDEBAR -> HORIZONTAL BOTTOM BAR WRAPPER */
   .dashboard-sidebar {
     position: fixed;
     bottom: 0;
@@ -500,24 +510,30 @@ label {
     width: 100%;
     height: 70px;
     
-    /* FORCE SIDE BY SIDE */
-    display: flex !important;
-    flex-direction: row !important; 
-    align-items: center;
-    justify-content: space-between; /* Spread them out */
-    
     padding: 0;
     margin: 0;
-    gap: 0;
     
     background: rgba(10, 10, 10, 0.98); /* Solid dark bg */
     backdrop-filter: blur(20px);
     border-right: none;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
     z-index: 9999;
+    
+    display: block; /* The inner .sidebar-nav will handle flex */
   }
 
-  /* 4. BUTTONS (Side by Side) */
+  /* 4. FORCE THE NAV CONTAINER TO BE HORIZONTAL ROW */
+  .sidebar-nav {
+    display: flex !important;
+    flex-direction: row !important; /* Forces side-by-side */
+    align-items: center;
+    justify-content: space-between; /* Evenly spaced */
+    width: 100%;
+    height: 100%;
+    gap: 0;
+  }
+
+  /* 5. BUTTONS (Side by Side) */
   .nav-item {
     flex: 1; /* Makes every button equal width */
     height: 100%;
@@ -526,18 +542,18 @@ label {
     border-radius: 0;
     
     display: flex;
-    flex-direction: column; /* Icon/Text stack if needed */
+    flex-direction: column; /* Icon/Text stack */
     justify-content: center;
     align-items: center;
     text-align: center;
     
-    font-size: 0.7rem; /* Small text to fit nicely */
+    font-size: 0.7rem; /* Small text */
     padding: 0 2px;
     background: transparent !important;
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: nowrap; 
   }
 
-  /* 5. ACTIVE STATE (Top Indicator) */
+  /* 6. ACTIVE STATE (Top Indicator) */
   .nav-item.active {
     border-left: none;
     border-top: 3px solid var(--primary);
@@ -545,7 +561,7 @@ label {
     box-shadow: none;
   }
 
-  /* 6. LOGOUT BUTTON (Join the row) */
+  /* 7. LOGOUT BUTTON (Join the row) */
   .nav-item.logout {
     margin-top: 0;
     border: none;
@@ -555,13 +571,13 @@ label {
     flex: 0.8; /* Make logout slightly narrower */
   }
 
-  /* 7. HIDE DESKTOP EXTRAS */
+  /* 8. HIDE DESKTOP EXTRAS */
   .top-user { display: none; }
   
-  /* 8. ADJUST HERO TEXT */
+  /* 9. ADJUST HERO TEXT */
   .hero-tagline { font-size: 1.8rem; }
   .hero-logo { width: 60%; margin-bottom: 20px; }
   
-  /* 9. CHAT SIZE */
+  /* 10. CHAT SIZE */
   .chat-container { height: 75vh; }
 }
