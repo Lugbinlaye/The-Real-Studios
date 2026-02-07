@@ -55,7 +55,7 @@ let messagesUnsub = null;
 let inboxUnsub = null;
 let isAdminOnline = false; // Tracks if admin is online
 
-// ⚠️ IMPORTANT: Paste your Admin UID here
+// ⚠️ Admin UID
 const ADMIN_UID = "aMXaGE0upecbXpdhR6t6qQEMDLH3"; 
 
 /* ===============================
@@ -340,7 +340,7 @@ async function openProjectDetails(projectId) {
 }
 
 /* ===============================
-   SEND MESSAGE (With Auto-Reply & Email)
+   SEND MESSAGE (With Auto-Reply & EmailJS)
 ================================ */
 async function sendMessage(projectId, input, projectData) {
     const text = input.value.trim();
@@ -377,28 +377,27 @@ async function sendMessage(projectId, input, projectData) {
                 });
             }, 1000); 
 
-            // B. TRIGGER FIREBASE EMAIL EXTENSION
-            // We write to the 'mail' collection, the extension handles the rest.
-            await addDoc(collection(db, "mail"), {
-                to: ["paulolugbenga@therealstudios.art"], // <--- REPLACE THIS WITH YOUR EMAIL
-                message: {
-                    subject: `New Message: ${projectData.title}`,
-                    html: `
-                        <h2>New Client Message</h2>
-                        <p><strong>Client:</strong> ${auth.currentUser.displayName || auth.currentUser.email}</p>
-                        <p><strong>Project:</strong> ${projectData.title}</p>
-                        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-                        <hr>
-                        <p><strong>Message:</strong></p>
-                        <blockquote style="background: #f9f9f9; padding: 15px; border-left: 5px solid #FF3B30;">
-                           ${text}
-                        </blockquote>
-                        <br>
-                        <p><a href="${projectData.fileURL}" style="background:#000; color:#fff; padding:10px; text-decoration:none;">View Project Brief</a></p>
-                    `
-                }
-            });
-            console.log("Offline email request sent to system.");
+            // B. TRIGGER EMAIL VIA EMAILJS
+            const serviceID = "service_j1o66n8";   // <--- Paste from EmailJS
+            const templateID = "template_pw0rthm"; // <--- Paste from EmailJS
+
+            // This object matches the variables in your EmailJS Template
+            const templateParams = {
+                user_name: auth.currentUser.displayName || "Client",
+                user_email: auth.currentUser.email,
+                project_title: projectData.title,
+                message: text,
+                brief_link: projectData.fileURL,
+                // Optional: You can hardcode the admin email here if your template uses {{to_email}}
+                to_email: "paulolugbenga@therealstudios.art" 
+            };
+
+            emailjs.send(serviceID, templateID, templateParams)
+                .then(() => {
+                    console.log("Email sent successfully!");
+                }, (err) => {
+                    console.error("Failed to send email:", err);
+                });
         }
 
     } catch (e) {
