@@ -370,7 +370,7 @@ async function sendMessage(projectId, input, projectData) {
                     fromUserId: "SYSTEM",
                     fromRole: "admin", 
                     toUserId: currentUserId,
-                    message: "Auto-Reply: I am currently offline. I have received your message via email and will get back to you shortly.",
+                    message: "Admin: I am currently offline. I have received your message via email and will get back to you shortly.",
                     read: true,
                     isAutoReply: true,
                     createdAt: serverTimestamp()
@@ -380,7 +380,7 @@ async function sendMessage(projectId, input, projectData) {
             // B. TRIGGER FIREBASE EMAIL EXTENSION
             // We write to the 'mail' collection, the extension handles the rest.
             await addDoc(collection(db, "mail"), {
-                to: ["info@therealstudios.art"], // <--- REPLACE THIS WITH YOUR EMAIL
+                to: ["paulolugbenga@therealstudios.art"], // <--- REPLACE THIS WITH YOUR EMAIL
                 message: {
                     subject: `New Message: ${projectData.title}`,
                     html: `
