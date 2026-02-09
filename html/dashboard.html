@@ -7,7 +7,7 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script type="text/javascript">
    (function(){
-      // ⚠️ REPLACE THIS WITH YOUR ACTUAL PUBLIC KEY FROM EMAILJS DASHBOARD
+      // ⚠️ KEEPING YOUR KEY
       emailjs.init("u7sPiH_LPF8VFk5tP"); 
    })();
 </script>
@@ -17,6 +17,9 @@
 </head>
 
 <body>
+  <div class="lang-wrapper">
+  
+</div>
 
 <div class="dashboard-wrapper">
 
@@ -25,10 +28,13 @@
       <button class="nav-item active" data-section="home">Home</button>
       <button class="nav-item" data-section="create">Create Project</button>
       <button class="nav-item" data-section="projects">My Projects</button>
+      <button class="nav-item" data-section="payments">Payments</button>
       <button class="nav-item" data-section="inbox">Inbox</button>
       <button id="logoutBtn" class="nav-item logout">Log Out</button>
+       <div id="trs-lang-container"></div>
     </nav>
   </aside>
+  
 
   <main class="dashboard-main">
 
@@ -37,7 +43,6 @@
     </video>
     <div class="dashboard-overlay"></div>
 
-  
    <section id="home" class="dashboard-section active">
   <div class="hero-container">
     <img src="../assets/images/logo.png" alt="The Real Studios" class="hero-logo">
@@ -100,6 +105,13 @@
       </div>
     </section>
 
+    <section id="payments" class="dashboard-section">
+      <h2 class="section-title">Invoices & Receipts</h2>
+      <div id="paymentsList" class="projects-grid">
+        <div class="glass-card">Loading financial records...</div>
+      </div>
+    </section>
+
     <section id="projectDetails" class="dashboard-section">
       <div id="projectDetailsContent" class="glass-card"></div>
     </section>
@@ -115,5 +127,6 @@
 </div>
 
 <script type="module" src="../assets/js/dashboard.js"></script>
+<script src="../assets/js/translation.js"></script>
 </body>
 </html>

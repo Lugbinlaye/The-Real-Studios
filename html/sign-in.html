@@ -14,39 +14,36 @@
 <body>
 
   <div class="page-wrapper overflow-hidden">
-
+    
     <section class="auth-section position-relative min-vh-100">
 
-      <!-- VIDEO BACKGROUND -->
       <video class="auth-video" autoplay muted loop playsinline preload="auto">
         <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
       </video>
 
-      <!-- DARK OVERLAY -->
       <div class="auth-overlay"></div>
 
-      <!-- CONTENT -->
+      <div style="position: absolute; top: 20px; right: 20px; z-index: 100; min-width: 120px;">
+          <div id="trs-lang-container"></div>
+      </div>
+
       <div class="auth-content d-flex align-items-center justify-content-center min-vh-100">
         <div class="auth-card">
 
-          <!-- LOGO -->
           <div class="auth-logo text-center mb-4">
             <a href="index.html" class="logo-white">
-            <img src="../assets/images/logos/logo-white.svg" alt="The Real Studios">
+              <img src="../assets/images/logos/logo-white.svg" alt="The Real Studios">
             </a>
           </div>
 
-          <!-- TOGGLE -->
           <div class="auth-toggle mb-4">
             <button class="auth-tab active" data-target="signin">Sign In</button>
             <button class="auth-tab" data-target="signup">Sign Up</button>
             <span class="auth-indicator"></span>
           </div>
 
-          <!-- FORMS -->
           <div class="auth-forms">
 
-            <!-- SIGN IN -->
             <form id="signin" class="auth-form active">
               <input type="email" name="signinEmail" placeholder="Email address" required>
               <input type="password" name="signinPassword" placeholder="Password" required>
@@ -54,45 +51,25 @@
               <p class="auth-meta mt-2">Forgot password?</p>
             </form>
 
-            <!-- SIGN UP -->
             <form id="signup" class="auth-form">
-
-              <!-- 1. Full Name -->
               <input type="text" name="signupName" placeholder="Full Name" required>
-
-              <!-- 2. Company Name -->
               <input type="text" name="companyName" placeholder="Company Name" required>
-
-              <!-- 3. Email -->
               <input type="email" name="signupEmail" placeholder="Email Address" required>
-
-              <!-- 4. Phone Number -->
               <input type="tel" name="phone" placeholder="Phone Number" required>
-
-              <!-- 5. Physical Address -->
+              
               <input type="text" name="address" placeholder="Physical Address" required>
-
-              <!-- 6. City -->
               <input type="text" name="city" placeholder="City" required>
-
-              <!-- 7. State/Province -->
               <input type="text" name="state" placeholder="State/Province" required>
-
-              <!-- 8. Country -->
               <input type="text" name="country" placeholder="Country" required>
-
-              <!-- 9. Website (if any) -->
+              
               <input type="url" name="website" placeholder="Website (optional)">
-
-              <!-- 10. Preferred Contact Method -->
               <select name="contactMethod" required>
                 <option value="" disabled selected>Preferred Contact Method</option>
                 <option>Email</option>
                 <option>Phone</option>
                 <option>WhatsApp</option>
               </select>
-
-              <!-- Password -->
+              
               <input type="password" name="signupPassword" placeholder="Password" required>
 
               <button class="btn btn-main btn-round-full w-100">Create Account</button>
@@ -102,7 +79,7 @@
 
         </div>
       </div>
-
+      
     </section>
 
   </div>
@@ -113,11 +90,11 @@
   <script src="../assets/libs/aos-master/dist/aos.js"></script>
   <script src="../assets/js/custom.js"></script>
 
-  <!-- Firebase & Auth -->
   <script type="module" src="../assets/js/auth.js"></script>
 
-  <!-- Iconify -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-</body>
 
+  <script src="../assets/js/translation.js"></script>
+
+</body>
 </html>

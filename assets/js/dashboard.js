@@ -18,6 +18,7 @@ import {
   onSnapshot,
   doc,
   getDoc,
+  setDoc, 
   updateDoc,
   serverTimestamp,
   orderBy
@@ -53,13 +54,14 @@ let currentUserId = null;
 let projectsUnsub = null;
 let messagesUnsub = null;
 let inboxUnsub = null;
-let isAdminOnline = false; // Tracks if admin is online
+let paymentsUnsub = null; 
+let isAdminOnline = false;
 
 // ⚠️ Admin UID
 const ADMIN_UID = "aMXaGE0upecbXpdhR6t6qQEMDLH3"; 
 
 /* ===============================
-   AUTH STATE & USER NAME FETCH
+   AUTH STATE
 ================================ */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -68,31 +70,19 @@ onAuthStateChanged(auth, async (user) => {
   }
   currentUserId = user.uid;
 
-  // 1. Try to get name from Auth Profile first
-  let realName = user.displayName;
+  // Start Presence
+  startPresenceHeartbeat(user.uid);
 
-  // 2. If Auth name is missing, fetch from Firestore "users" collection
+  let realName = user.displayName;
   if (!realName) {
       try {
-          const userDocRef = doc(db, "users", currentUserId);
-          const userSnap = await getDoc(userDocRef);
-          
-          if (userSnap.exists()) {
-              const userData = userSnap.data();
-              realName = userData.name || userData.fullName || userData.firstName;
-          }
-      } catch (error) {
-          console.log("Could not fetch user profile from DB:", error);
-      }
+          const userSnap = await getDoc(doc(db, "users", currentUserId));
+          if (userSnap.exists()) realName = userSnap.data().name;
+      } catch (error) {}
   }
-
-  // 3. Final Fallback
   const finalDisplayName = realName || user.email.split("@")[0];
-
   const homeWelcomeEl = document.getElementById("homeWelcome");
-  if (homeWelcomeEl) {
-      homeWelcomeEl.textContent = `Welcome, ${finalDisplayName}`;
-  }
+  if (homeWelcomeEl) homeWelcomeEl.textContent = `Welcome, ${finalDisplayName}`;
 
   if (document.getElementById("projects")?.classList.contains("active")) {
     startProjectsListener();
@@ -100,14 +90,29 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 /* ===============================
+   PRESENCE HEARTBEAT
+================================ */
+function startPresenceHeartbeat(uid) {
+    const userRef = doc(db, "users", uid);
+    const update = async () => {
+        try {
+            await setDoc(userRef, { 
+                lastSeen: serverTimestamp(),
+                email: auth.currentUser.email 
+            }, { merge: true });
+        } catch (e) {}
+    };
+    update(); 
+    setInterval(update, 60 * 1000); 
+}
+
+/* ===============================
    NAVIGATION
 ================================ */
 document.querySelectorAll(".nav-item").forEach(btn => {
   btn.addEventListener("click", () => {
     if (btn.id === "logoutBtn") {
-      signOut(auth).then(() => {
-          window.location.href = "../html/sign-in.html";
-      });
+      signOut(auth).then(() => window.location.href = "../html/sign-in.html");
       return;
     }
 
@@ -122,6 +127,7 @@ document.querySelectorAll(".nav-item").forEach(btn => {
 
     if (btn.dataset.section === "projects") startProjectsListener();
     if (btn.dataset.section === "inbox") startInboxListener();
+    if (btn.dataset.section === "payments") startPaymentsListener(); 
   });
 });
 
@@ -186,7 +192,6 @@ dashboardForm?.addEventListener("submit", async e => {
 function startProjectsListener() {
   const list = document.getElementById("projectsList");
   if (!list || !currentUserId) return;
-
   list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading projects...</div>`;
 
   const q = query(
@@ -201,12 +206,10 @@ function startProjectsListener() {
       list.innerHTML = `<div class="glass-card" style="text-align:center;">No projects found. <br><br> Start by creating a new one!</div>`;
       return;
     }
-
     snap.forEach(docSnap => {
       const p = docSnap.data();
       const card = document.createElement("div");
       card.className = "glass-card project-card";
-      
       let badgeClass = "status-active";
       if(p.status === "Pending") badgeClass = "status-pending";
       
@@ -223,22 +226,66 @@ function startProjectsListener() {
       card.onclick = () => openProjectDetails(docSnap.id);
       list.appendChild(card);
     });
-  }, (error) => {
-      if(error.code === 'failed-precondition') {
-          list.innerHTML = `<div class="glass-card error" style="border:1px solid #FF3B30;"><strong>Action Required:</strong> Check Browser Console for Firebase Index Link.</div>`;
-      }
   });
 }
 
 /* ===============================
-   PROJECT DETAILS & CHAT (UPDATED)
+   PAYMENTS & INVOICES (UPDATED)
+================================ */
+function startPaymentsListener() {
+  const list = document.getElementById("paymentsList");
+  if (!list || !currentUserId) return;
+  list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading financial history...</div>`;
+
+  const q = query(
+    collection(db, "invoices"),
+    where("clientEmail", "==", auth.currentUser.email),
+    orderBy("createdAt", "desc")
+  );
+
+  paymentsUnsub = onSnapshot(q, (snap) => {
+    list.innerHTML = "";
+    if (snap.empty) {
+      list.innerHTML = `<div class="glass-card" style="text-align:center;">No transaction history found.</div>`;
+      return;
+    }
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const isReceipt = data.type === 'receipt';
+      const card = document.createElement("div");
+      card.className = "glass-card project-card";
+      card.style.cursor = "default";
+      
+      // Styling logic: Receipts are green, Invoices are Red/Default
+      const statusColor = isReceipt ? '#00ffc3' : '#FF3B30';
+      const statusBg = isReceipt ? 'rgba(0, 255, 195, 0.2)' : 'rgba(255, 59, 48, 0.2)';
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+            <h3 style="margin-top:0; color:${statusColor};">${isReceipt ? 'Receipt' : 'Invoice'}: ${data.invoiceId}</h3>
+            <span class="status-badge" style="background: ${statusBg}; color: ${statusColor}; border:1px solid ${statusColor};">
+                ${data.status}
+            </span>
+        </div>
+        <p style="margin: 10px 0;">Amount: <strong style="font-size: 1.2rem; color: #fff;">$${data.amount}</strong></p>
+        <div style="display:flex; justify-content:space-between; opacity:0.6; font-size:0.85rem;">
+            <span>Project: ${data.projectTitle || 'N/A'}</span>
+            <span>Date: ${data.date}</span>
+        </div>
+      `;
+      list.appendChild(card);
+    });
+  });
+}
+
+/* ===============================
+   PROJECT DETAILS & CHAT
 ================================ */
 async function openProjectDetails(projectId) {
   if (!currentUserId) return;
-
   document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
   document.getElementById("projectDetails").classList.add("active");
-
   const container = document.getElementById("projectDetailsContent");
   container.innerHTML = "Loading project details...";
 
@@ -250,15 +297,12 @@ async function openProjectDetails(projectId) {
         return;
       }
       const p = snap.data();
-
-      // RENDER DETAILS + CHAT UI
       container.innerHTML = `
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
              <button id="backBtn" class="glass-btn">← Back</button>
              <h2 style="margin:0; text-shadow: 0 0 10px rgba(255,59,48,0.4);">${p.title}</h2>
              <a href="${p.fileURL}" target="_blank" class="glass-btn" style="font-size:0.8rem;">Brief ⬇</a>
         </div>
-
         <div class="glass-card" style="margin-bottom: 25px;">
              <p style="opacity:0.8; margin-bottom:15px; line-height:1.6;">${p.description}</p>
              <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -269,7 +313,6 @@ async function openProjectDetails(projectId) {
                 <div class="progress-fill" style="width:${p.progress || 0}%;"></div>
              </div>
         </div>
-
         <div class="chat-container">
             <div class="chat-header">
                 <div class="avatar-circle">🤖</div>
@@ -281,13 +324,7 @@ async function openProjectDetails(projectId) {
                     </div>
                 </div>
             </div>
-            
-            <div id="messagesContainer" class="chat-body">
-                <div style="text-align:center; opacity:0.5; margin-top:30px;">
-                    Starting secure connection...
-                </div>
-            </div>
-            
+            <div id="messagesContainer" class="chat-body"></div>
             <div class="chat-footer">
                 <input type="text" id="clientMessageInput" placeholder="Type your message..." autocomplete="off">
                 <button id="sendClientMsgBtn" class="send-btn">➤</button>
@@ -295,196 +332,98 @@ async function openProjectDetails(projectId) {
         </div>
       `;
 
-      // 1. LISTEN TO ADMIN STATUS (For UI)
       onSnapshot(doc(db, "config", "adminStatus"), (statusSnap) => {
           if (statusSnap.exists()) {
               isAdminOnline = statusSnap.data().online;
               const dot = container.querySelector(".status-dot");
               const text = container.querySelector("#statusText");
-              
               if (dot && text) {
                 if (isAdminOnline) {
-                    dot.style.background = "#00ffc3"; // Green
-                    dot.style.boxShadow = "0 0 8px #00ffc3";
-                    text.textContent = "Online";
-                    text.style.color = "#00ffc3";
+                    dot.style.background = "#00ffc3"; dot.style.boxShadow = "0 0 8px #00ffc3";
+                    text.textContent = "Online"; text.style.color = "#00ffc3";
                 } else {
-                    dot.style.background = "#ff3b30"; // Red
-                    dot.style.boxShadow = "0 0 8px #ff3b30";
-                    text.textContent = "Away (Auto-Reply On)";
-                    text.style.color = "#ff3b30";
+                    dot.style.background = "#ff3b30"; dot.style.boxShadow = "0 0 8px #ff3b30";
+                    text.textContent = "Away"; text.style.color = "#ff3b30";
                 }
               }
           }
       });
 
-      // Back Button
       document.getElementById("backBtn").onclick = () => {
         document.getElementById("projects").classList.add("active");
         document.getElementById("projectDetails").classList.remove("active");
         if(messagesUnsub) messagesUnsub();
       };
 
-      // Start Chat Listener
       startChatListener(projectId);
-
-      // Send Logic - PASS PROJECT DATA (p) FOR EMAIL
       const sendBtn = document.getElementById("sendClientMsgBtn");
       const input = document.getElementById("clientMessageInput");
-
       sendBtn.onclick = () => sendMessage(projectId, input, p);
-      input.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") sendMessage(projectId, input, p);
-      });
+      input.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(projectId, input, p); });
   });
 }
 
-/* ===============================
-   SEND MESSAGE (With Auto-Reply & EmailJS)
-================================ */
 async function sendMessage(projectId, input, projectData) {
     const text = input.value.trim();
     if (!text) return;
-
     try {
-        // 1. Save Client Message to Database
         await addDoc(collection(db, "messages"), {
-          projectId,
-          fromUserId: currentUserId,
-          fromRole: "client",
-          toUserId: ADMIN_UID,
-          message: text,
-          read: false,
-          createdAt: serverTimestamp()
+          projectId, fromUserId: currentUserId, fromRole: "client",
+          toUserId: ADMIN_UID, message: text, read: false, createdAt: serverTimestamp()
         });
-        
-        input.value = ""; // Clear input
-
-        // 2. IF ADMIN IS OFFLINE -> TRIGGER EMAIL & AUTO-REPLY
+        input.value = ""; 
         if (!isAdminOnline) {
-            
-            // A. Send Auto-Reply to Chat (Simulated Admin)
             setTimeout(async () => {
                 await addDoc(collection(db, "messages"), {
-                    projectId,
-                    fromUserId: "SYSTEM",
-                    fromRole: "admin", 
-                    toUserId: currentUserId,
-                    message: "Admin: I am currently offline. I have received your message via email and will get back to you shortly.",
-                    read: true,
-                    isAutoReply: true,
-                    createdAt: serverTimestamp()
+                    projectId, fromUserId: "SYSTEM", fromRole: "admin", toUserId: currentUserId,
+                    message: "Admin is offline. Message sent via email.", read: true, isAutoReply: true, createdAt: serverTimestamp()
                 });
             }, 1000); 
 
-            // B. TRIGGER EMAIL VIA EMAILJS
-            const serviceID = "service_j1o66n8";   // <--- Paste from EmailJS
-            const templateID = "template_pw0rthm"; // <--- Paste from EmailJS
-
-            // This object matches the variables in your EmailJS Template
-            const templateParams = {
-                user_name: auth.currentUser.displayName || "Client",
-                user_email: auth.currentUser.email,
-                project_title: projectData.title,
-                message: text,
-                brief_link: projectData.fileURL,
-                // Optional: You can hardcode the admin email here if your template uses {{to_email}}
-                to_email: "paulolugbenga@therealstudios.art" 
-            };
-
-            emailjs.send(serviceID, templateID, templateParams)
-                .then(() => {
-                    console.log("Email sent successfully!");
-                }, (err) => {
-                    console.error("Failed to send email:", err);
-                });
+            // EMAILJS FOR CHAT (Kept separate as per request)
+            emailjs.send("service_j1o66n8", "template_pw0rthm", {
+                user_name: auth.currentUser.displayName, user_email: auth.currentUser.email,
+                project_title: projectData.title, message: text, to_email: "paulolugbenga@therealstudios.art"
+            });
         }
-
-    } catch (e) {
-        console.error("Message failed:", e);
-    }
+    } catch (e) { console.error("Message failed:", e); }
 }
 
 function startChatListener(projectId) {
     if (messagesUnsub) messagesUnsub();
-
-    const messagesRef = query(
-      collection(db, "messages"),
-      where("projectId", "==", projectId),
-      orderBy("createdAt", "asc")
-    );
-  
+    const q = query(collection(db, "messages"), where("projectId", "==", projectId), orderBy("createdAt", "asc"));
     const msgBox = document.getElementById("messagesContainer");
-  
-    messagesUnsub = onSnapshot(messagesRef, (snap) => {
+    messagesUnsub = onSnapshot(q, (snap) => {
       if (!snap.empty) msgBox.innerHTML = "";
-      
       snap.forEach(d => {
         const m = d.data();
         const div = document.createElement("div");
-        const isAdmin = m.fromRole === "admin";
-        
-        div.className = `message-bubble ${isAdmin ? 'received' : 'sent'}`;
+        div.className = `message-bubble ${m.fromRole === 'admin' ? 'received' : 'sent'}`;
         div.textContent = m.message;
-        
         msgBox.appendChild(div);
       });
-      
       msgBox.scrollTop = msgBox.scrollHeight;
-      
-    }, (error) => {
-        if(error.code === 'failed-precondition') {
-            msgBox.innerHTML = `<div style="text-align:center; color:#FF3B30;">Missing Index. Check Console.</div>`;
-        }
     });
 }
 
-/* ===============================
-   INBOX LISTENER
-================================ */
 function startInboxListener() {
   const list = document.getElementById("inboxList");
   if (!list || !currentUserId) return;
-
   list.innerHTML = `<div class="glass-card" style="text-align:center;">Loading inbox...</div>`;
-
-  const q = query(
-    collection(db, "messages"),
-    where("toUserId", "==", currentUserId),
-    where("fromRole", "==", "admin"),
-    orderBy("createdAt", "desc")
-  );
-
+  const q = query(collection(db, "messages"), where("toUserId", "==", currentUserId), where("fromRole", "==", "admin"), orderBy("createdAt", "desc"));
   inboxUnsub = onSnapshot(q, snap => {
     list.innerHTML = "";
     if (snap.empty) {
       list.innerHTML = `<div class="glass-card" style="text-align:center;">Inbox is empty.</div>`;
       return;
     }
-
     snap.forEach(d => {
       const m = d.data();
       const item = document.createElement("div");
       item.className = "glass-card";
-      item.style.cursor = "pointer";
       item.style.marginBottom = "15px";
-      item.style.padding = "20px";
-      item.style.transition = "transform 0.2s";
-      
-      if(!m.read) {
-          item.style.borderLeft = "5px solid #FF3B30"; 
-          item.style.background = "rgba(255, 59, 48, 0.05)";
-      }
-      
-      item.onmouseover = () => item.style.transform = "translateX(5px)";
-      item.onmouseout = () => item.style.transform = "translateX(0)";
-
-      item.innerHTML = `
-        <h4 style="margin:0 0 5px 0; color:#FF3B30;">From Admin</h4>
-        <p style="margin:0; opacity:0.9;">${m.message}</p>
-        <small style="opacity:0.5; font-size:0.8rem;">${m.createdAt?.toDate().toLocaleString()}</small>
-      `;
-      
+      if(!m.read) { item.style.borderLeft = "5px solid #FF3B30"; item.style.background = "rgba(255, 59, 48, 0.05)"; }
+      item.innerHTML = `<h4 style="margin:0 0 5px 0; color:#FF3B30;">From Admin</h4><p style="margin:0; opacity:0.9;">${m.message}</p><small style="opacity:0.5;">${m.createdAt?.toDate().toLocaleString()}</small>`;
       item.onclick = async () => {
         openProjectDetails(m.projectId);
         if (!m.read) updateDoc(doc(db, "messages", d.id), { read: true });
@@ -498,4 +437,5 @@ function stopAllListeners() {
   if(projectsUnsub) projectsUnsub();
   if(messagesUnsub) messagesUnsub();
   if(inboxUnsub) inboxUnsub();
+  if(paymentsUnsub) paymentsUnsub(); 
 }

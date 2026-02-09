@@ -386,3 +386,37 @@
     overflow-x: scroll;
   }
 }
+/* INVOICE MODAL STYLES */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center;
+}
+.invoice-container {
+  background: white; color: #1A1A1B; width: 800px; padding: 40px; border-radius: 4px; font-family: sans-serif;
+}
+.invoice-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+.invoice-logo { height: 60px; filter: invert(1); } /* Assuming dark logo needs inverting for white BG */
+.social-info { font-size: 10px; color: #666; text-align: right; }
+.invoice-title-box { text-align: right; }
+.invoice-label { font-size: 40px; font-weight: 800; letter-spacing: 2px; }
+.invoice-number-red { background: #E31E24; color: white; padding: 5px 20px; font-weight: bold; margin-top: 5px; }
+
+.invoice-meta { display: flex; justify-content: space-between; margin-bottom: 30px; }
+.invoice-to label { color: #E31E24; font-weight: bold; font-size: 14px; }
+.invoice-to h3 { margin: 5px 0; color: #1A1A1B; font-size: 22px; }
+
+.invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+.invoice-table th { background: #1A1A1B; color: white; padding: 12px; text-align: left; font-size: 12px; }
+.invoice-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+.invoice-table tr:nth-child(even) { background: #f9f9f9; }
+.red-column { background: #E31E24 !important; color: white !important; text-align: center !important; width: 100px; }
+.grand-total-label { background: #1A1A1B; color: white; text-align: center; font-weight: bold; }
+.grand-total-value { background: #E31E24; color: white; text-align: center; font-size: 20px; font-weight: bold; }
+
+.invoice-footer { display: flex; justify-content: space-between; margin-top: 40px; }
+.payment-criteria h4 { font-size: 12px; color: #1A1A1B; margin-bottom: 5px; border-bottom: 1px solid #1A1A1B; display: inline-block; }
+.payment-criteria p { font-size: 11px; color: #666; margin-bottom: 15px; }
+.signature-section { text-align: center; width: 200px; }
+.signature-line { border-top: 1px solid #1A1A1B; margin-bottom: 10px; }
+
+.modal-actions { margin-top: 30px; display: flex; gap: 20px; justify-content: flex-end; }

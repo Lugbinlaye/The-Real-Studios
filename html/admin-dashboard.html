@@ -4,27 +4,56 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard | The Real Studios</title>
+  
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+     (function(){
+        // Ensure this Public Key is correct in your EmailJS Account
+        emailjs.init("u7sPiH_LPF8VFk5tP"); 
+     })();
+  </script>
+
   <link rel="stylesheet" href="../assets/css/dashboard.css" />
+  
+  <style>
+    /* INVOICE MODAL SYSTEM */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center; overflow-y: auto; padding: 20px; }
+    .invoice-paper { background: white; color: #1A1A1B; width: 100%; max-width: 800px; padding: 40px; border-radius: 4px; font-family: 'Helvetica', sans-serif; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    .invoice-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+    .invoice-logo { height: 50px; filter: invert(1); margin-bottom: 10px; }
+    .invoice-id-badge { background: #E31E24; color: white; padding: 5px 15px; font-weight: bold; display: inline-block; margin-top: 5px; }
+    .invoice-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    .invoice-table th { background: #1A1A1B; color: white; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; }
+    .invoice-table td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; color: #1A1A1B; }
+    .red-column { background: #E31E24 !important; color: white !important; text-align: right !important; width: 120px; }
+    
+    /* BUILDER STYLES */
+    .builder-row { display: grid; grid-template-columns: 2fr 1fr 0.5fr 40px; gap: 10px; margin-bottom: 10px; }
+    .builder-input { padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px; font-size: 14px; }
+    .remove-item { background: #FF3B30; color: white; border: none; border-radius: 6px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
 <div class="dashboard-wrapper">
-
   <aside class="dashboard-sidebar">
     <div class="sidebar-nav">
       <button class="nav-item active" data-section="home">Overview</button>
       <button class="nav-item" data-section="projects">Management</button>
+      <button class="nav-item" data-section="payments">Payments</button>
       <button class="nav-item" data-section="inbox">Inbox</button>
       <button class="nav-item" id="toggleStatusBtn" style="justify-content: space-between;">
-    <span>Status</span>
-    <span id="adminStatusIndicator" class="status-dot online"></span>
-</button>
+        <span>Status</span>
+        <span id="adminStatusIndicator" class="status-dot online"></span>
+      </button>
       <button class="nav-item logout" id="logoutBtn">Log Out</button>
+      <div class="lang-wrapper">
+   <div id="trs-lang-container"></div>
+</div>
     </div>
   </aside>
 
   <main class="dashboard-main">
-
     <video class="dashboard-video" autoplay muted loop playsinline>
       <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
     </video>
@@ -32,38 +61,84 @@
 
     <section id="home" class="dashboard-section active">
       <div class="hero-container">
-        <img src="../assets/images/logo.png" alt="The Real Studios" class="hero-logo">
-        
+        <img src="../assets/images/logo.png" alt="Logo" class="hero-logo">
         <h2 class="hero-welcome">Admin Command Center</h2>
-        <h1 class="hero-tagline">
-          Managing the <span class="text-highlight">Dream.</span>
-        </h1>
+        <h1 class="hero-tagline">Managing the <span class="text-highlight">Dream.</span></h1>
       </div>
     </section>
 
     <section id="projects" class="dashboard-section">
       <h2 class="section-title">Client Projects</h2>
-      <div id="projectsList" class="projects-grid">
-        <div class="glass-card" style="text-align:center;">Loading database...</div>
-      </div>
+      <div id="projectsList" class="projects-grid"></div>
+    </section>
+
+    <section id="payments" class="dashboard-section">
+      <h2 class="section-title">Payment History</h2>
+      <div id="adminPaymentsList" class="projects-grid"></div>
     </section>
 
     <section id="projectDetails" class="dashboard-section">
-      <div id="adminDetailsContent">
-        </div>
+      <div id="adminDetailsContent"></div>
     </section>
 
     <section id="inbox" class="dashboard-section">
       <h2 class="section-title">Admin Inbox</h2>
-      <div id="adminInboxList" class="projects-grid">
-        <div class="glass-card" style="text-align:center;">Loading messages...</div>
-      </div>
+      <div id="adminInboxList" class="projects-grid"></div>
     </section>
-
   </main>
 </div>
 
-<script type="module" src="../assets/js/admin-dashboard.js"></script>
+<div id="invoiceModal" class="modal-overlay">
+    <div class="invoice-paper">
+        <div class="invoice-header">
+            <div>
+                <img src="../assets/images/logo.png" alt="Logo" class="invoice-logo">
+                <div style="font-size: 10px; color: #666;">Ibadan, Oyo State, Nigeria</div>
+            </div>
+            <div style="text-align: right;">
+                <h1 style="font-size: 40px; margin: 0; font-weight: 900;">INVOICE</h1>
+                <div id="previewInvoiceId" class="invoice-id-badge">TRS-000000</div>
+            </div>
+        </div>
 
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; border-top: 4px solid #1A1A1B; padding-top: 15px;">
+            <div>
+                <label style="color: #E31E24; font-weight: bold; font-size: 12px;">INVOICE TO:</label>
+                <h3 id="previewClientName" style="margin: 0; text-transform: uppercase;">CLIENT</h3>
+                <p id="previewClientEmail" style="margin: 0; color: #666; font-size: 12px;"></p>
+            </div>
+            <div style="text-align: right; font-size: 12px;">
+                <p>Date: <span id="previewDate" style="font-weight: bold;">--</span></p>
+            </div>
+        </div>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Items</th>
+                    <th style="text-align: right;">Price</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th class="red-column">Total</th>
+                </tr>
+            </thead>
+            <tbody id="previewTableBody"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="border: none;"></td>
+                    <td style="background: #1A1A1B; color: white; padding: 12px; text-align: center; font-weight: bold;">GRAND TOTAL</td>
+                    <td id="previewGrandTotal" style="background: #E31E24; color: white; padding: 12px; text-align: right; font-weight: bold; font-size: 16px;">$0.00</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="modal-actions">
+            <button id="cancelInvoice" class="glass-btn" style="background: #666; border: none;">Discard</button>
+            <button id="confirmInvoice" class="btn-primary" style="background: #E31E24; border: none;">Confirm & Send Receipt</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="../assets/js/admin-dashboard.js"></script>
+<script src="../assets/js/translation.js"></script>
 </body>
 </html>
