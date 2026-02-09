@@ -1,4 +1,4 @@
-console.log("Admin Dashboard JS loaded - Dashboard-Only Mode Active");
+console.log("Admin Dashboard JS: Branding Updated & PDF Fixed");
 
 /* ===============================
    FIREBASE IMPORTS
@@ -48,10 +48,11 @@ let messagesListener = null;
 let adminInboxListener = null;
 let adminPaymentsUnsub = null; 
 let clientStatusUnsub = null;
+let clientProfileUnsub = null;
 
 // Financial Builder State
 let invoiceItems = []; 
-let isReceiptMode = false; // Toggle state
+let isReceiptMode = false; 
 
 /* ===============================
    AUTH & NAVIGATION
@@ -84,6 +85,7 @@ document.querySelectorAll(".nav-item").forEach(btn => {
         if (adminInboxListener) adminInboxListener();
         if (adminPaymentsUnsub) adminPaymentsUnsub();
         if (clientStatusUnsub) clientStatusUnsub();
+        if (clientProfileUnsub) clientProfileUnsub();
 
         // Start relevant listener
         if (btn.dataset.section === "projects") loadAdminProjects();
@@ -140,7 +142,7 @@ function loadAdminProjects() {
 }
 
 /* ===============================
-   2. PROJECT EDITOR (Receipt/Invoice Builder)
+   2. PROJECT EDITOR (Updated for Name Capture)
 ================================ */
 function openProjectEditor(projectId) {
     document.querySelectorAll(".dashboard-section").forEach(s => s.classList.remove("active"));
@@ -150,6 +152,10 @@ function openProjectEditor(projectId) {
     container.innerHTML = "Fetching project data...";
 
     if (clientStatusUnsub) clientStatusUnsub();
+    if (clientProfileUnsub) clientProfileUnsub();
+
+    // Variable to hold the real client name
+    let currentClientName = "Valued Client"; 
 
     const docRef = doc(db, "projects", projectId);
 
@@ -174,6 +180,11 @@ function openProjectEditor(projectId) {
                  </div>
 
                  <a href="${p.fileURL}" target="_blank" class="glass-btn">View Brief ⬇</a>
+            </div>
+
+            <div class="glass-card" style="margin-bottom: 20px; border-left: 4px solid var(--primary);">
+                <h4 style="margin-bottom:10px; color:var(--primary);">Client Profile</h4>
+                <div id="clientProfileData" style="font-size: 0.9rem; line-height: 1.6; opacity:0.8;">Loading info...</div>
             </div>
 
             <h3 style="margin-bottom:5px; color:#FF3B30;">${p.title}</h3>
@@ -227,17 +238,26 @@ function openProjectEditor(projectId) {
             </div>
         `;
 
-        // 1. SETUP BUILDER UI & TOGGLES
-        renderInvoiceBuilderRows();
-        setupBuilderToggles();
+        // 1. FETCH CLIENT INFO (Capture Name Here)
+        clientProfileUnsub = onSnapshot(doc(db, "users", p.userId), (userSnap) => {
+            const profileBox = document.getElementById("clientProfileData");
+            if (userSnap.exists() && profileBox) {
+                const u = userSnap.data();
+                
+                // Set the name variable
+                currentClientName = u.name || u.fullName || p.userEmail.split('@')[0];
 
-        // 2. SETUP PRESENCE LISTENER
-        clientStatusUnsub = onSnapshot(doc(db, "users", p.userId), (userSnap) => {
-            const dot = document.getElementById("clientStatusDot");
-            const text = document.getElementById("clientStatusText");
-            if (userSnap.exists() && dot) {
-                const userData = userSnap.data();
-                const lastSeen = userData.lastSeen ? userData.lastSeen.toDate() : null;
+                profileBox.innerHTML = `
+                    <strong>Name:</strong> ${currentClientName} <br>
+                    <strong>Email:</strong> ${u.email} <br>
+                    <strong>Phone:</strong> ${u.phone || "N/A"} <br>
+                    <strong>Joined:</strong> ${u.createdAt ? u.createdAt.toDate().toLocaleDateString() : "Unknown"}
+                `;
+
+                // Update Presence Dot
+                const dot = document.getElementById("clientStatusDot");
+                const text = document.getElementById("clientStatusText");
+                const lastSeen = u.lastSeen ? u.lastSeen.toDate() : null;
                 if (lastSeen && (new Date() - lastSeen)/1000 < 120) {
                     dot.style.background = "#00ffc3";
                     dot.style.boxShadow = "0 0 10px #00ffc3";
@@ -252,17 +272,23 @@ function openProjectEditor(projectId) {
             }
         });
 
+        // 2. SETUP BUILDER UI & TOGGLES
+        renderInvoiceBuilderRows();
+        setupBuilderToggles();
+
         // 3. EVENT HANDLERS
         document.getElementById("addItemBtn").onclick = () => {
             invoiceItems.push({ desc: "", price: 0, qty: 1 });
             renderInvoiceBuilderRows();
         };
 
-        document.getElementById("previewInvoiceBtn").onclick = () => showInvoicePreview(p, projectId);
+        // Pass clientName to the preview function
+        document.getElementById("previewInvoiceBtn").onclick = () => showInvoicePreview(p, projectId, currentClientName);
 
         document.getElementById("backToProjects").onclick = () => {
             invoiceItems = []; 
             if (clientStatusUnsub) clientStatusUnsub(); 
+            if (clientProfileUnsub) clientProfileUnsub();
             document.querySelector('[data-section="projects"]').click();
         };
 
@@ -287,7 +313,7 @@ function openProjectEditor(projectId) {
             });
             input.value = ""; 
 
-            // Basic presence check for email
+            // Basic presence check for email notification
             let isClientOnline = false;
             try {
                 const u = await getDoc(doc(db, "users", p.userId));
@@ -296,7 +322,7 @@ function openProjectEditor(projectId) {
 
             if(!isClientOnline) {
                  const templateParams = {
-                    client_name: p.userEmail.split('@')[0], 
+                    client_name: currentClientName, 
                     to_email: p.userEmail,
                     project_title: p.title,
                     message: text,
@@ -327,7 +353,6 @@ function setupBuilderToggles() {
     const setMode = (mode) => {
         isReceiptMode = mode === 'receipt';
         if (isReceiptMode) {
-            // Receipt Style (Green)
             btnRec.style.background = "#00ffc3"; btnRec.style.color = "#000";
             btnInv.style.background = "transparent"; btnInv.style.color = "#fff";
             title.textContent = "Receipt Builder"; title.style.color = "#00ffc3";
@@ -335,7 +360,6 @@ function setupBuilderToggles() {
             total.style.color = "#00ffc3";
             actionBtn.style.background = "#00ffc3"; actionBtn.textContent = "Preview Receipt";
         } else {
-            // Invoice Style (Blue/Standard)
             btnInv.style.background = "#FF3B30"; btnInv.style.color = "#fff";
             btnRec.style.background = "transparent"; btnRec.style.color = "#fff";
             title.textContent = "Invoice Builder"; title.style.color = "#FF3B30";
@@ -347,8 +371,6 @@ function setupBuilderToggles() {
 
     btnInv.onclick = () => setMode('invoice');
     btnRec.onclick = () => setMode('receipt');
-    
-    // Default
     setMode('invoice');
 }
 
@@ -398,21 +420,20 @@ function updateBuilderTotal() {
 }
 
 /* ===============================
-   4. PREVIEW, PUBLISH & EMAIL (FIREBASE NATIVE)
+   4. PREVIEW & PUBLISH (Branding Update)
 ================================ */
-function showInvoicePreview(project, projectId) {
+function showInvoicePreview(project, projectId, clientName) {
     const modal = document.getElementById("invoiceModal");
     const idPrefix = isReceiptMode ? "RCPT" : "INV";
     const docId = `${idPrefix}-${Math.floor(100000 + Math.random() * 900000)}`;
     const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     const cleanEmail = (project.userEmail || "").trim().toLowerCase();
 
-    // Update Modal UI based on Mode
-    const modalTitle = document.querySelector("#invoiceModal h2"); // Assuming there's an h2
+    const modalTitle = document.querySelector("#invoiceModal h2");
     if(modalTitle) modalTitle.textContent = isReceiptMode ? "Confirm Receipt" : "Confirm Invoice";
     
     document.getElementById("previewInvoiceId").textContent = docId;
-    document.getElementById("previewClientName").textContent = cleanEmail.split('@')[0].toUpperCase();
+    document.getElementById("previewClientName").textContent = clientName.toUpperCase(); // Display Name
     document.getElementById("previewClientEmail").textContent = cleanEmail;
     document.getElementById("previewDate").textContent = today;
 
@@ -420,14 +441,12 @@ function showInvoicePreview(project, projectId) {
     tableBody.innerHTML = "";
     let grandTotal = 0;
     
-    // Generate Items HTML (Used for both Modal and Email)
     let emailItemsHtml = "";
 
     invoiceItems.forEach((item) => {
         const rowTotal = item.price * item.qty;
         grandTotal += rowTotal;
         
-        // Modal Row
         tableBody.innerHTML += `
             <tr style="border-bottom: 1px solid #eee;">
                 <td style="padding:10px;">${item.desc}</td>
@@ -437,7 +456,6 @@ function showInvoicePreview(project, projectId) {
             </tr>
         `;
 
-        // Email HTML Row
         emailItemsHtml += `
             <tr>
                 <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.desc}</td>
@@ -451,38 +469,35 @@ function showInvoicePreview(project, projectId) {
     document.getElementById("previewGrandTotal").textContent = `$${grandTotal.toLocaleString()}`;
     modal.style.display = "flex";
 
-    // CONFIRM PUBLISH
     document.getElementById("confirmInvoice").onclick = async () => {
         const btn = document.getElementById("confirmInvoice");
         btn.disabled = true;
         btn.textContent = "Publishing...";
 
         try {
-            // 1. Save to Database (Invoices Collection)
             await addDoc(collection(db, "invoices"), {
                 invoiceId: docId, 
                 projectId, 
-                type: isReceiptMode ? "receipt" : "invoice", // Distinction
+                type: isReceiptMode ? "receipt" : "invoice",
                 projectTitle: project.title,
-                clientEmail: cleanEmail, 
+                clientEmail: cleanEmail,
+                clientName: clientName, // Save name to DB
                 items: invoiceItems,
                 amount: grandTotal, 
-                status: isReceiptMode ? "Paid" : "Pending", // Receipt is always paid
+                status: isReceiptMode ? "Paid" : "Pending",
                 date: today, 
                 createdAt: serverTimestamp()
             });
 
-            // 2. TRIGGER FIREBASE EMAIL EXTENSION
-            // Writes to 'mail' collection. Requires 'Trigger Email' extension installed.
+            // Trigger Email (Branding Updated)
             await addDoc(collection(db, "mail"), {
                 to: cleanEmail,
                 message: {
-                    subject: isReceiptMode ? `Payment Receipt: ${docId}` : `New Invoice: ${docId}`,
+                    subject: isReceiptMode ? `Receipt from THE REAL STUDIOS: ${docId}` : `Invoice from THE REAL STUDIOS: ${docId}`,
                     html: `
                         <div style="font-family: sans-serif; padding: 20px; color: #333;">
-                            <h2 style="color: ${isReceiptMode ? '#00a86b' : '#E31E24'};">
-                                ${isReceiptMode ? 'Payment Receipt' : 'Invoice Due'}
-                            </h2>
+                            <h2 style="color: ${isReceiptMode ? '#00a86b' : '#E31E24'};">THE REAL STUDIOS</h2>
+                            <p>Hi ${clientName}, here is your ${isReceiptMode ? 'receipt' : 'invoice'} details:</p>
                             <p><strong>Project:</strong> ${project.title}</p>
                             <p><strong>Date:</strong> ${today}</p>
                             <p><strong>Total:</strong> $${grandTotal.toLocaleString()}</p>
@@ -506,7 +521,7 @@ function showInvoicePreview(project, projectId) {
                 }
             });
 
-            alert(`${isReceiptMode ? 'Receipt' : 'Invoice'} Published & Email Triggered!`);
+            alert(`${isReceiptMode ? 'Receipt' : 'Invoice'} Published!`);
             modal.style.display = "none";
             invoiceItems = []; 
         } catch (err) {
@@ -522,7 +537,7 @@ function showInvoicePreview(project, projectId) {
 }
 
 /* ===============================
-   5. LISTENERS
+   5. LISTENERS & BRANDED DOWNLOADABLE MODAL
 ================================ */
 function loadMessages(projectId) {
     const container = document.getElementById("projectMessages");
@@ -548,18 +563,143 @@ function startAdminPaymentsListener() {
         snap.forEach(d => {
             const data = d.data();
             const isReceipt = data.type === 'receipt';
+            const color = isReceipt ? "#00ffc3" : "#FF3B30";
+            
             const card = document.createElement("div");
             card.className = "glass-card";
             card.style.marginBottom = "10px";
-            card.style.borderLeft = isReceipt ? "4px solid #00ffc3" : "4px solid #FF3B30";
+            card.style.borderLeft = `4px solid ${color}`;
+            card.style.cursor = "pointer"; 
+            
             card.innerHTML = `
                 <strong>${data.invoiceId}</strong> 
-                <span style="float:right; color:${isReceipt ? '#00ffc3' : '#FF3B30'}">$${data.amount}</span>
-                <br> <small style="opacity:0.6;">${data.clientEmail} | ${data.date}</small>
+                <span style="float:right; color:${color}">$${data.amount.toLocaleString()}</span>
+                <br> <small style="opacity:0.6;">${data.clientName || data.clientEmail}</small>
             `;
+            
+            // OPEN BRANDED MODAL
+            card.onclick = () => openAdminInvoiceModal(data);
+            
             list.appendChild(card);
         });
     });
+}
+
+// *** NEW BRANDED MODAL & IFRAME DOWNLOAD ***
+function openAdminInvoiceModal(data) {
+    const isReceipt = data.type === 'receipt';
+    const themeColor = isReceipt ? '#00ffc3' : '#FF3B30';
+    const title = isReceipt ? 'OFFICIAL RECEIPT' : 'INVOICE';
+    // Use saved name or fallback to email
+    const clientName = data.clientName || data.clientEmail.split('@')[0];
+
+    const modal = document.createElement("div");
+    modal.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); display:flex; justify-content:center; align-items:center; z-index:9999;`;
+
+    // Modal HTML (Dark Theme for Screen)
+    modal.innerHTML = `
+        <div style="background:#121212; color:#fff; width:90%; max-width:500px; padding:30px; border-radius:12px; border-top:5px solid ${themeColor}; box-shadow:0 20px 50px rgba(0,0,0,0.5); font-family:sans-serif;">
+            <button class="close-btn" style="float:right; background:none; border:none; color:#fff; font-size:24px; cursor:pointer;">&times;</button>
+            
+            <div style="text-align:center; margin-bottom:20px;">
+                <h2 style="color:${themeColor}; margin:0; letter-spacing:2px;">${title}</h2>
+                <div style="opacity:0.6; font-size:0.9rem;">#${data.invoiceId} &bull; ${data.date}</div>
+            </div>
+            
+            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:20px;">
+                <div style="font-size:0.8rem; opacity:0.7;">BILLED TO:</div>
+                <div style="font-size:1.1rem; font-weight:bold; text-transform:capitalize;">${clientName}</div>
+                <div style="font-size:0.9rem;">${data.clientEmail}</div>
+                
+                <div style="font-size:0.8rem; opacity:0.7; margin-top:10px;">FROM:</div>
+                <div style="font-weight:bold;">THE REAL STUDIOS</div>
+            </div>
+            
+            <div>
+                ${(data.items || []).map(i => `
+                    <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.1);">
+                        <span>${i.desc} (x${i.qty})</span>
+                        <span>$${(i.price * i.qty).toLocaleString()}</span>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:20px; font-weight:bold; font-size:1.2rem; border-top:2px dashed #444; padding-top:10px;">
+                <span>TOTAL</span>
+                <span style="color:${themeColor}">$${data.amount.toLocaleString()}</span>
+            </div>
+            
+            <button id="downloadPdfBtn" style="background:${themeColor}; color:#000; width:100%; padding:15px; border:none; border-radius:8px; font-weight:bold; margin-top:25px; cursor:pointer;">DOWNLOAD PDF</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector(".close-btn").onclick = () => modal.remove();
+    modal.onclick = (e) => { if(e.target === modal) modal.remove(); };
+
+    // IFRAME PRINT LOGIC (Clean White Paper Style)
+    modal.querySelector("#downloadPdfBtn").onclick = () => {
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:absolute;width:0;height:0;border:none;';
+        document.body.appendChild(iframe);
+        
+        const doc = iframe.contentWindow.document;
+        doc.write(`
+            <html>
+            <head>
+                <title>${title}_${data.invoiceId}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 40px; color: #000; }
+                    .box { border-top: 5px solid ${themeColor}; padding-top: 20px; }
+                    h1 { margin: 0; }
+                    .grid { display: flex; justify-content: space-between; margin: 30px 0; }
+                    .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                    .total { font-weight: bold; font-size: 1.2em; display: flex; justify-content: space-between; margin-top: 20px; border-top: 2px dashed #000; padding-top: 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="box">
+                    <center>
+                        <h1>THE REAL STUDIOS</h1>
+                        <h2 style="color:${themeColor}">${title}</h2>
+                        <p>#${data.invoiceId} &bull; ${data.date}</p>
+                    </center>
+                    <div class="grid">
+                        <div>
+                            <strong>BILLED TO:</strong><br>
+                            <span style="font-size:1.2em">${clientName}</span><br>
+                            ${data.clientEmail}
+                        </div>
+                        <div style="text-align:right;">
+                            <strong>PROJECT:</strong><br>
+                            ${data.projectTitle || 'Service'}<br>
+                            Status: ${data.status}
+                        </div>
+                    </div>
+                    <div>
+                        ${(data.items || []).map(i => `
+                            <div class="row">
+                                <span>${i.desc} (x${i.qty})</span>
+                                <span>$${(i.price * i.qty).toLocaleString()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="total">
+                        <span>TOTAL</span>
+                        <span style="color:${themeColor}">$${data.amount.toLocaleString()}</span>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `);
+        doc.close();
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            document.body.removeChild(iframe);
+        }, 500);
+    };
 }
 
 function startAdminInboxListener() {
