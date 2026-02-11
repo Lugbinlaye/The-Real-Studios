@@ -1,100 +1,115 @@
 <!doctype html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>The Real Studios - Sign In</title>
-  <link rel="shortcut icon" type="image/png" href="../assets/images/logos/favicon.svg" />
-  <link rel="stylesheet" href="../assets/libs/owl.carousel/dist/assets/owl.carousel.min.css">
-  <link rel="stylesheet" href="../assets/libs/aos-master/dist/aos.css">
-  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <title>TRS | Terminal_Uplink_v23</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </head>
 
-<body>
+<body style="background: #000; color: #fff; margin: 0; overflow-x: hidden;">
 
   <div class="page-wrapper overflow-hidden">
-    
     <section class="auth-section position-relative min-vh-100">
 
-      <video class="auth-video" autoplay muted loop playsinline preload="auto">
-        <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
-      </video>
+     <video class="auth-video" autoplay muted loop playsinline preload="auto" 
+       poster="../assets/images/backgrounds/fallback-frame.jpg"
+       style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; filter: brightness(0.3) saturate(0.8);">
+    <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
+</video>
 
-      <div class="auth-overlay"></div>
-
-      <div style="position: absolute; top: 20px; right: 20px; z-index: 100; min-width: 120px;">
-          <div id="trs-lang-container"></div>
-      </div>
-
-      <div class="auth-content d-flex align-items-center justify-content-center min-vh-100">
-        <div class="auth-card">
-
-          <div class="auth-logo text-center mb-4">
-            <a href="index.html" class="logo-white">
-              <img src="../assets/images/logos/logo-white.svg" alt="The Real Studios">
-            </a>
+<div class="auth-overlay" style="background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(5,5,5,0.9) 100%); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></div>
+      <div class="auth-content d-flex align-items-center justify-content-center min-vh-100" style="position: relative; z-index: 10;">
+        
+        <div class="glass-card auth-card" style="max-width: 550px; width: 95%; backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.15); padding: 45px; background: rgba(10,10,10,0.85); box-shadow: 0 0 50px rgba(0,0,0,0.5);">
+          
+          <div style="text-align: center; margin-bottom: 40px;">
+            <img src="../assets/images/logos/logo-white.svg" alt="TRS" style="height: 55px; margin-bottom: 15px;">
+            <div id="auth-telemetry" style="font-family: 'Space Mono'; font-size: 0.75rem; color: var(--studio-red); letter-spacing: 5px; font-weight: 700; text-transform: uppercase;">AWAITING_UPLINK_PROTOCOL</div>
           </div>
 
-          <div class="auth-toggle mb-4">
-            <button class="auth-tab active" data-target="signin">Sign In</button>
-            <button class="auth-tab" data-target="signup">Sign Up</button>
-            <span class="auth-indicator"></span>
+          <div class="auth-toggle-hud" style="display: flex; gap: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 45px;">
+            <button class="auth-tab active" data-target="signin-section">01_AUTHORIZE</button>
+            <button class="auth-tab" data-target="signup-section">02_ENROLL</button>
           </div>
 
-          <div class="auth-forms">
+          <div class="auth-forms-container">
 
             <form id="signin" class="auth-form active">
-              <input type="email" name="signinEmail" placeholder="Email address" required>
-              <input type="password" name="signinPassword" placeholder="Password" required>
-              <button class="btn btn-main btn-round-full w-100">Sign In</button>
-              <p class="auth-meta mt-2">Forgot password?</p>
+              <span class="meta-label">Credential_Input</span>
+              <input type="email" id="signinEmail" placeholder="ID@STUDIO.COM" required>
+              
+              <div class="password-wrapper">
+                <input type="password" id="signinPassword" placeholder="PASSKEY" required>
+                <iconify-icon icon="ph:eye-closed-bold" class="password-toggle" onclick="togglePasswordView(this)"></iconify-icon>
+              </div>
+              
+              <button type="submit" class="btn-kinetic-red w-100">INITIATE_SESSION</button>
             </form>
 
-            <form id="signup" class="auth-form">
-              <input type="text" name="signupName" placeholder="Full Name" required>
-              <input type="text" name="companyName" placeholder="Company Name" required>
-              <input type="email" name="signupEmail" placeholder="Email Address" required>
-              <input type="tel" name="phone" placeholder="Phone Number" required>
-              
-              <input type="text" name="address" placeholder="Physical Address" required>
-              <input type="text" name="city" placeholder="City" required>
-              <input type="text" name="state" placeholder="State/Province" required>
-              <input type="text" name="country" placeholder="Country" required>
-              
-              <input type="url" name="website" placeholder="Website (optional)">
-              <select name="contactMethod" required>
-                <option value="" disabled selected>Preferred Contact Method</option>
-                <option>Email</option>
-                <option>Phone</option>
-                <option>WhatsApp</option>
-              </select>
-              
-              <input type="password" name="signupPassword" placeholder="Password" required>
+            <form id="signup" class="auth-form" style="display: none;">
+              <span class="meta-label">Identity_Selection</span>
+              <div class="role-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px;">
+                  <label class="kinetic-radio-card active" id="role-client">
+                      <input type="radio" name="userRole" value="client" checked style="display: none;">
+                      CLIENT_ENTITY
+                  </label>
+                  <label class="kinetic-radio-card" id="role-studio">
+                      <input type="radio" name="userRole" value="studio" style="display: none;">
+                      STUDIO_PARTNER
+                  </label>
+              </div>
 
-              <button class="btn btn-main btn-round-full w-100">Create Account</button>
+              <span class="meta-label">Primary_Dossier</span>
+              <input type="text" id="signupName" placeholder="LEGAL_NAME" required>
+              <input type="email" id="signupEmail" placeholder="AUTH_EMAIL" required>
+              
+              <div id="studioExtraFields" style="display: none;">
+                  <span class="meta-label">Technical_Vetting</span>
+                  <select id="studioSpecialty">
+                      <option value="" disabled selected>PRIMARY_SPECIALTY</option>
+                      <option>3D Animation & VFX</option>
+                      <option>Architecture & Design</option>
+                      <option>Brand Identity</option>
+                      <option>Software Engineering</option>
+                  </select>
+                  <select id="yearsExperience">
+                      <option value="" disabled selected>EXPERIENCE_LEVEL</option>
+                      <option>0-2 Years</option>
+                      <option>3-5 Years</option>
+                      <option>5+ Years</option>
+                      <option>10+ Years</option>
+                  </select>
+                  <input type="text" id="portfolioUrl" placeholder="PORTFOLIO_LINK">
+                  <input type="text" id="primaryTools" placeholder="PRIMARY_TOOLS (e.g. UNREAL, FIGMA)">
+              </div>
+
+              <span class="meta-label">Passkey_Security</span>
+              <div class="password-wrapper">
+                <input type="password" id="signupPassword" placeholder="CREATE_PASSKEY" required>
+                <iconify-icon icon="ph:eye-closed-bold" class="password-toggle" onclick="togglePasswordView(this)"></iconify-icon>
+              </div>
+
+              <div class="strength-meter-container">
+                  <div id="strength-bar" class="strength-bar"></div>
+                  <div id="strength-text" class="strength-text">STRENGTH: WEAK</div>
+              </div>
+
+              <div class="password-wrapper">
+                <input type="password" id="confirmPassword" placeholder="CONFIRM_PASSKEY" required>
+                <iconify-icon icon="ph:eye-closed-bold" class="password-toggle" onclick="togglePasswordView(this)"></iconify-icon>
+              </div>
+
+              <button type="submit" class="btn-kinetic-red w-100">COMMIT_ENROLLMENT</button>
             </form>
-
           </div>
-
         </div>
       </div>
-      
     </section>
-
   </div>
 
-  <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
-  <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="../assets/libs/owl.carousel/dist/owl.carousel.min.js"></script>
-  <script src="../assets/libs/aos-master/dist/aos.js"></script>
-  <script src="../assets/js/custom.js"></script>
-
   <script type="module" src="../assets/js/auth.js"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-
-  <script src="../assets/js/translation.js"></script>
-
 </body>
 </html>

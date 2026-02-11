@@ -420,3 +420,140 @@
 .signature-line { border-top: 1px solid #1A1A1B; margin-bottom: 10px; }
 
 .modal-actions { margin-top: 30px; display: flex; gap: 20px; justify-content: flex-end; }
+
+/* --- PREMIUM ADMIN UI OVERRIDES --- */
+
+/* Standardizing the Control Boxes to match your Glass Cards */
+.control-box {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.control-box:hover {
+    border-color: rgba(255, 59, 48, 0.3); /* Subtle Red Glow on hover */
+}
+
+/* Upgrading the Select Dropdowns */
+.phase-selector-ui select, 
+#adminStatusSelect {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    appearance: none; /* Removes the default arrow */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+/* Upgrading the Range Slider (The progress bar) */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: var(--primary); /* Your Red */
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 0 10px var(--primary);
+}
+
+/* List Item Polish */
+.admin-list-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+.wa-row {
+    display: flex;
+    width: 100%;
+}
+
+.wa-row.left {
+    justify-content: flex-start;
+}
+
+.wa-row.right {
+    justify-content: flex-end;
+}
+.wa-bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    position: relative;
+}
+.wa-bubble.received.with-tail::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    background: rgba(255,255,255,0.1);
+    border-bottom-right-radius: 12px;
+}
+.wa-bubble.sent.with-tail::before {
+    content: "";
+    position: absolute;
+    right: -6px;
+    bottom: 0;
+    width: 12px;
+    height: 12px;
+    background: #E31E24;
+    border-bottom-left-radius: 12px;
+}
+.wa-time {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    text-align: right;
+    margin-top: 4px;
+}
+.wa-bubble.received .wa-time {
+    text-align: left;
+}
+.wa-row + .wa-row {
+    margin-top: 2px;
+}
+
+.wa-row.left + .wa-row.right,
+.wa-row.right + .wa-row.left {
+    margin-top: 10px;
+}
+/* ===============================
+   PRINT STYLES (Add to bottom of CSS)
+================================ */
+@media print {
+  body * { visibility: hidden; }
+  #invoiceModal, #invoiceModal * { visibility: visible; }
+  #invoiceModal { position: absolute; left: 0; top: 0; background: white; }
+  .modal-actions, .close-modal, .no-print { display: none !important; }
+  .invoice-paper { box-shadow: none; border: none; width: 100%; max-width: 100%; }
+}
