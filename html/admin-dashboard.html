@@ -1,154 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard | The Real Studios</title>
-
-  <link rel="stylesheet" href="../assets/css/dashboard.css" />
-  <script type="module" src="../assets/js/guard.js"></script>
-  
-  <style>
-    /* PREMIUM MODAL & OVERLAY SYSTEM */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; overflow-y: auto; padding: 20px; backdrop-filter: blur(10px); }
-    .invoice-paper, .briefing-paper { background: white; color: #1A1A1B; width: 100%; max-width: 800px; padding: 40px; border-radius: 4px; font-family: 'Helvetica', sans-serif; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRS | ADMIN CONTROL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     
-    /* WHATSAPP-STYLE CHAT FOR B2B */
-    .wa-container { display: flex; flex-direction: column; height: 500px; background: rgba(0, 0, 0, 0.2); border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.05); overflow: hidden; }
-    .wa-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-    .wa-bubble { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.85rem; line-height: 1.4; position: relative; }
-    .wa-bubble.sent { align-self: flex-end; background: #E31E24; color: white; border-bottom-right-radius: 2px; }
-    .wa-bubble.received { align-self: flex-start; background: rgba(255,255,255,0.1); color: white; border-bottom-left-radius: 2px; border: 1px solid rgba(255,255,255,0.1); }
-    
-    /* TOOLBOX INPUTS */
-    .toolbox-label { font-size: 0.65rem; text-transform: uppercase; color: #E31E24; font-weight: bold; margin-bottom: 5px; display: block; letter-spacing: 1px; }
-    .partner-card { cursor: pointer; transition: 0.3s; }
-    .partner-card:hover { transform: translateY(-5px); border-color: #E31E24; background: rgba(255,255,255,0.05); }
+    <script type="module" src="../assets/js/admin-main.js"></script>
 
-    /* EXISTING BUILDER STYLES */
-    .builder-row { display: grid; grid-template-columns: 2fr 1fr 0.6fr 40px; gap: 15px; margin-bottom: 12px; align-items: center; background: rgba(255, 255, 255, 0.02); padding: 10px; border-radius: 10px; }
-    .builder-input { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 8px; font-size: 14px; margin-bottom: 10px; }
-    .premium-control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px; }
-    .control-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 12px; }
-    .control-box h4 { margin-top: 0; color: #E31E24; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-    .status-dot.online { background: #00ffc3; box-shadow: 0 0 10px #00ffc3; }
-    .status-dot.offline { background: #FF3B30; box-shadow: 0 0 10px #FF3B30; }
-  </style>
+    <style>.dashboard-section { display: none; }</style>
 </head>
 <body>
 
-<div class="dashboard-wrapper">
-  <aside class="dashboard-sidebar">
-    <div class="sidebar-nav">
-      <button class="nav-item active" data-section="home">Overview</button>
-      <button class="nav-item" data-section="projects">Management</button>
-      <button class="nav-item" data-section="partners">Partner Hub</button>
-      <button class="nav-item" data-section="payments">Payments</button>
-      <button class="nav-item" data-section="inbox">Inbox</button>
-      <button class="nav-item" id="toggleStatusBtn" style="justify-content: space-between;">
-        <span>Status</span>
-        <span id="adminStatusIndicator" class="status-dot online"></span>
-      </button>
-      <button class="nav-item logout" id="logoutBtn">Log Out</button>
-    </div>
-  </aside>
-
-  <main class="dashboard-main">
-    <video class="dashboard-video" autoplay muted loop playsinline>
-      <source src="../assets/images/backgrounds/auth-video.mp4" type="video/mp4">
-    </video>
-    <div class="dashboard-overlay"></div>
-
-    <section id="home" class="dashboard-section active">
-      <div class="hero-container">
-        <img src="../assets/images/logo.png" alt="Logo" class="hero-logo">
-        <h2 class="hero-welcome">The Real Studios Hub</h2>
-        <h1 class="hero-tagline">Collaboration is the <span class="text-highlight">Standard.</span></h1>
-      </div>
-    </section>
-
-    <section id="projects" class="dashboard-section">
-      <h2 class="section-title">Global Client Projects</h2>
-      <div id="projectsList" class="projects-grid"></div>
-    </section>
-
-    <section id="partners" class="dashboard-section"> 
-      <h2 class="section-title">International Studio Partners</h2>
-      <div id="partnersList" class="projects-grid"></div>
-    </section>
-
-    <section id="partnerControl" class="dashboard-section">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:25px;">
-            <button id="backToPartners" class="glass-btn">← Back to Hub</button>
-            <div style="text-align:center;">
-                <h2 id="detPartnerName" style="margin:0; color:var(--primary);">Studio Partner</h2>
-                <p id="detPartnerInfo" style="font-size:0.7rem; opacity:0.6; margin:5px 0;"></p>
+    <aside>
+        <div style="padding: 40px 30px; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+            <div style="font-family:'Space Mono'; font-weight:700; font-size:1.2rem; color:#fff; letter-spacing:1px;">TRS // ADMIN</div>
+            <div style="font-size:0.65rem; color:var(--admin-oxblood); margin-top:5px; letter-spacing:2px;">OPERATING SYSTEM V1.0</div>
+        </div>
+        
+        <div style="padding: 0 20px;">
+            <div class="nav-item active" data-section="overview">
+                <iconify-icon icon="solar:widget-5-bold"></iconify-icon> COMMAND CENTER
             </div>
-            <div id="detPartnerStatus" class="status-dot online"></div>
+            <div class="nav-item" data-section="sessions">
+                <iconify-icon icon="solar:layers-minimalistic-bold"></iconify-icon> ACTIVE SESSIONS
+            </div>
+            <div class="nav-item" data-section="partners">
+                <iconify-icon icon="solar:users-group-rounded-bold"></iconify-icon> PARTNER HUB
+            </div>
+            <div class="nav-item" data-section="finance">
+                <iconify-icon icon="solar:wallet-money-bold"></iconify-icon> FINANCIAL HQ
+            </div>
+            <div class="nav-item" data-section="inbox">
+                <iconify-icon icon="solar:chat-round-line-bold"></iconify-icon> SECURE UPLINK
+            </div>
+            <div class="nav-item" data-section="recycle">
+                <iconify-icon icon="solar:trash-bin-trash-bold"></iconify-icon> RECYCLE BIN
+            </div>
         </div>
 
-        <div class="premium-control-grid">
-            <div class="control-box">
-    <h4>Partner Toolbox</h4>
+        <div style="position:absolute; bottom:30px; left:30px; width: calc(100% - 60px);">
+            <button id="logoutBtn" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#888; padding:12px; cursor:pointer; font-family:'Space Mono'; font-size:0.7rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+                <iconify-icon icon="solar:logout-2-bold"></iconify-icon> TERMINATE SESSION
+            </button>
+        </div>
+    </aside>
 
-    <span class="toolbox-label">Linked Client Project</span>
-    <select id="collabProjectSelect" class="builder-input">
-        <option value="">— Select Client Project —</option>
-    </select>
-                
-    <span class="toolbox-label">Suggested Budget</span>
-    <input type="number" id="collabBudget" class="builder-input" placeholder="0.00">
-
-                <span class="toolbox-label">Delivery Deadline</span>
-                <input type="date" id="collabDeadline" class="builder-input">
-
-                <span class="toolbox-label">Google Meet Schedule</span>
-                <input type="datetime-local" id="collabMeet" class="builder-input">
-
-                <span class="toolbox-label">Media Assets Link</span>
-                <input type="url" id="collabMedia" class="builder-input" placeholder="Drive / Dropbox URL">
-
-                <span class="toolbox-label">Detailed Brief & Instructions</span>
-                <textarea id="collabInstructions" class="builder-input" style="height:100px; resize:none;" placeholder="Specify the creative direction..."></textarea>
-
-                <button id="sendBriefBtn" class="btn-primary" style="width:100%; margin-top:10px;">Push Brief & Notify</button>
+    <main>
+        
+        <section id="overview" class="dashboard-section active">
+            <div style="display:flex; justify-content:space-between; align-items:end; margin-bottom:30px;">
+                <h2>System Overview</h2>
+                <div style="text-align:right;">
+                    <div id="adminClock" style="font-family:'Space Mono'; font-size:1.5rem; font-weight:700; color:var(--admin-oxblood);">00:00:00</div>
+                    <div style="font-size:0.75rem; opacity:0.5;">ADMINISTRATOR ACCESS GRANTED</div>
+                </div>
             </div>
+            
+            <div class="admin-grid">
+                <div class="glass-card">
+                    <h3>Active Deployments</h3>
+                    <div id="statActiveCount" style="font-size:3rem; font-weight:700;">0</div>
+                </div>
+                <div class="glass-card" style="border-left: 3px solid var(--admin-gold);">
+                    <h3>Monthly Revenue</h3>
+                    <div id="statRevenue" style="font-size:3rem; font-weight:700; color:var(--admin-gold);">$0</div>
+                </div>
+                <div class="glass-card">
+                    <h3>Partner Network</h3>
+                    <div id="statPartners" style="font-size:3rem; font-weight:700;">0</div>
+                </div>
+            </div>
+            
+            <div class="glass-card" style="margin-top:20px;">
+                <h3>Recent Activity Log</h3>
+                <div id="activityLog" style="font-family:'Space Mono'; font-size:0.8rem; opacity:0.7; max-height:200px; overflow-y:auto;">
+                    <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);">SYSTEM INITIALIZED...</div>
+                </div>
+            </div>
+        </section>
 
-            <div class="control-box" style="display:flex; flex-direction:column; padding:0; overflow:hidden;">
-                <h4 style="padding:20px 20px 0 20px;">HQ Secure Line</h4>
-                <div class="wa-container">
-                    <div id="collabChatBody" class="wa-body">
-                        </div>
-                    <div style="padding:15px; background:rgba(255,255,255,0.03); display:flex; gap:10px; border-top:1px solid rgba(255,255,255,0.05);">
-                        <input type="text" id="collabChatInput" class="builder-input" style="margin:0;" placeholder="Message partner...">
-                        <button id="collabSendBtn" class="btn-primary" style="padding:0 20px;">➤</button>
+
+        <section id="sessions" class="dashboard-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2>Session Control</h2>
+                <button class="admin-btn" onclick="openCreateProjectModal()">+ NEW DEPLOYMENT</button>
+            </div>
+            <div id="sessionsList" class="admin-grid"></div>
+        </section>
+
+
+        <section id="partners" class="dashboard-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2>Partner Hub</h2>
+                <button class="admin-btn" onclick="openAddPartnerModal()">+ ADD TALENT</button>
+            </div>
+            <div id="partnerList" class="admin-grid"></div>
+        </section>
+
+
+        <section id="finance" class="dashboard-section">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2 style="color:var(--admin-gold);">Financial HQ</h2>
+                <button class="admin-btn" style="background:var(--admin-gold); color:#000;" onclick="openInvoiceModal()">+ ISSUE INVOICE</button>
+            </div>
+            <div id="financeOverview" class="glass-card">
+                <div style="opacity:0.5; text-align:center;">LEDGER SYNCING...</div>
+            </div>
+        </section>
+
+
+        <section id="inbox" class="dashboard-section">
+            <h2>Secure Uplink // Global</h2>
+            <div style="display:grid; grid-template-columns: 300px 1fr; gap:20px; height:70vh;">
+                <div class="glass-card" style="overflow-y:auto;" id="chatList">
+                    </div>
+                <div class="glass-card" style="display:flex; flex-direction:column;">
+                    <div id="activeChatHeader" style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:15px; margin-bottom:15px;">SELECT A CHANNEL</div>
+                    <div id="adminChatBody" style="flex:1; overflow-y:auto; background:rgba(0,0,0,0.3); border-radius:8px; margin-bottom:15px;"></div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="adminChatInput" class="admin-input" placeholder="Transmission...">
+                        <button id="adminChatSend" class="admin-btn">SEND</button>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <section id="payments" class="dashboard-section">
-      <h2 class="section-title">Payment History</h2>
-      <div id="adminPaymentsList" class="projects-grid"></div>
-    </section>
 
-    <section id="projectDetails" class="dashboard-section">
-      <div id="adminDetailsContent"></div>
-    </section>
+        <section id="recycle" class="dashboard-section">
+            <h2 style="color:#666;">Recycle Bin</h2>
+            <div id="recycleList" class="admin-grid"></div>
+        </section>
 
-    <section id="inbox" class="dashboard-section">
-      <h2 class="section-title">Communications</h2>
-      <div id="adminInboxList" class="projects-grid"></div>
-    </section>
-  </main>
-</div>
+    </main>
 
-<div id="invoiceModal" class="modal-overlay">
+    <div id="adminModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(5px); z-index:9999; justify-content:center; align-items:center;">
+        <div id="adminModalContent" class="glass-card" style="width:500px; background:#111; border:1px solid var(--admin-oxblood);"></div>
     </div>
 
-<script type="module" src="../assets/js/admin-dashboard.js"></script>
 </body>
 </html>

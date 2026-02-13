@@ -4,6 +4,7 @@ import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.
 
 
 
+// --- 1. CONFIGURATION (HARDCODED FOR LOCALHOST) ---
 const firebaseConfig = {
     apiKey: window.TRS_VAULT?.API_KEY,
     authDomain: window.TRS_VAULT?.AUTH_DOMAIN,
@@ -12,6 +13,10 @@ const firebaseConfig = {
     messagingSenderId: window.TRS_VAULT?.MESSAGING_SENDER_ID,
     appId: window.TRS_VAULT?.APP_ID
 };
+/* // KEEP THIS COMMENTED OUT UNTIL YOU DEPLOY
+   const vault = window.TRS_VAULT || {};
+   const firebaseConfig = { ...vault ... }; 
+*/
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
